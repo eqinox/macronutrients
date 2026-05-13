@@ -9,8 +9,8 @@ interface FoodData {
   carbs: number;
   calories: number;
   aminoAcids: {
-    essential: Record<keyof typeof EssentialAminoAcids, number>;
-    nonEssential: Record<keyof typeof NonEssentialAminoAcids, number>;
+    essential: Partial<Record<keyof typeof EssentialAminoAcids, number>>;
+    nonEssential: Partial<Record<keyof typeof NonEssentialAminoAcids, number>>;
   };
   vitamins: Record<string, string>;
   minerals: Record<string, string>;

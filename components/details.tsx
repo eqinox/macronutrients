@@ -6,26 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 import { ScrollArea } from "./ui/scroll-area";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { EssentialAminoAcids, NonEssentialAminoAcids } from "@/lib/enums/aminoAcids";
-import Leucine from "./aminoacids/essentials/leucine";
-import Isoleucine from "./aminoacids/essentials/isoleucine";
-import Valine from "./aminoacids/essentials/valine";
-import Lysine from "./aminoacids/essentials/lysine";
-import Methionine from "./aminoacids/essentials/methionine";
-import Phenylalanine from "./aminoacids/essentials/phenylalanine";
-import Threonine from "./aminoacids/essentials/threonine";
-import Tryptophan from "./aminoacids/essentials/tryptophan";
-import Histidine from "./aminoacids/essentials/histidine";
-import Alanine from "./aminoacids/nonessentials/alanine";
-import Arginine from "./aminoacids/nonessentials/arginine";
-import Asparagine from "./aminoacids/nonessentials/asparagine";
-import AsparticAcid from "./aminoacids/nonessentials/asparticacid";
-import Cysteine from "./aminoacids/nonessentials/cysteine";
-import GlutamicAcid from "./aminoacids/nonessentials/glutamicacid";
-import Glutamine from "./aminoacids/nonessentials/glutamine";
-import Glycine from "./aminoacids/nonessentials/glycine";
-import Proline from "./aminoacids/nonessentials/proline";
-import Serine from "./aminoacids/nonessentials/serine";
-import Tyrosine from "./aminoacids/nonessentials/tyrosine";
+import { AminoMap } from "@/lib/aminoAcidMappings";
 
 interface FoodData {
     name: string;
@@ -34,35 +15,12 @@ interface FoodData {
     carbs: number;
     calories: number;
     aminoAcids: {
-        essential: Record<keyof typeof EssentialAminoAcids, number>;
-        nonEssential: Record<keyof typeof NonEssentialAminoAcids, number>;
+        essential: Partial<Record<keyof typeof EssentialAminoAcids, number>>;
+        nonEssential: Partial<Record<keyof typeof NonEssentialAminoAcids, number>>;
     };
     vitamins: Record<string, string>;
     minerals: Record<string, string>;
 }
-
-const AminoModalMap = {
-    Leucine,
-    Isoleucine,
-    Valine,
-    Lysine,
-    Methionine,
-    Phenylalanine,
-    Threonine,
-    Tryptophan,
-    Histidine,
-    Alanine,
-    Arginine,
-    Asparagine,
-    AsparticAcid,
-    Cysteine,
-    GlutamicAcid,
-    Glutamine,
-    Glycine,
-    Proline,
-    Serine,
-    Tyrosine,
-} as const;
 
 export default function Details({ food }: { food: FoodData }) {
     const [isAminoOpen, setIsAminoOpen] = useState(false);
@@ -76,9 +34,13 @@ export default function Details({ food }: { food: FoodData }) {
     const handleAminoacidNonEssentialClick = (aminoAcid: keyof typeof NonEssentialAminoAcids) => {
         setSelectedAminoAcid(aminoAcid);
     }
-    const aminoAcidsEssential = (Object.entries(food.aminoAcids.essential).sort((a, b) => b[1] - a[1])) as Array<[keyof typeof EssentialAminoAcids, number]>;
-    const ActiveAminoModal = selectedAminoAcid ? AminoModalMap[selectedAminoAcid] : null;
-    const aminoAcidsNonEssential = (Object.entries(food.aminoAcids.nonEssential).sort((a, b) => b[1] - a[1])) as Array<[keyof typeof NonEssentialAminoAcids, number]>;
+    const aminoAcidsEssential = (Object.entries(food.aminoAcids.essential)
+        .filter((entry): entry is [keyof typeof EssentialAminoAcids, number] => entry[1] !== undefined)
+        .sort((a, b) => b[1] - a[1]));
+    const ActiveAminoModal = selectedAminoAcid ? AminoMap[selectedAminoAcid] : null;
+    const aminoAcidsNonEssential = (Object.entries(food.aminoAcids.nonEssential)
+        .filter((entry): entry is [keyof typeof NonEssentialAminoAcids, number] => entry[1] !== undefined)
+        .sort((a, b) => b[1] - a[1]));
 
     return (
         <>

@@ -1,4 +1,5 @@
-import ProteinsSection from "@/components/proteins-section"
+import CarbohydratesSection from "@/components/carbohydrates/carbohydrates-section"
+import ProteinsSection from "@/components/proteins/proteins-section"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata = {
@@ -11,14 +12,15 @@ export default function Page() {
       <h1 className="text-2xl font-bold">Макронутриенти</h1>
 
       <ProteinsSection />
+      <CarbohydratesSection />
 
-      <Card className="max-w-md">
+      {/* <Card className="max-w-md">
         <CardHeader>
           <CardTitle>
             Въглехидрати
           </CardTitle>
         </CardHeader>
-      </Card>
+      </Card> */}
 
       <Card className="max-w-md">
         <CardHeader>
