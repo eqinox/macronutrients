@@ -1,19 +1,32 @@
-import { Button } from "@/components/ui/button"
+import ProteinsSection from "@/components/proteins-section"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+export const metadata = {
+  title: "Макронутриенти",
+}
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-bold">Макронутриенти</h1>
+
+      <ProteinsSection />
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>
+            Въглехидрати
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>
+            Мазнини
+          </CardTitle>
+        </CardHeader>
+      </Card>
     </div>
   )
 }
