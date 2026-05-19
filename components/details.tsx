@@ -45,7 +45,7 @@ export default function Details({ food }: { food: FoodData }) {
     return (
         <>
             <Card className="max-w-md ml-4">
-                <ScrollArea className="h-72">
+                <ScrollArea className="window">
                     <CardHeader>
                         <CardTitle>{food.name} - Детайли</CardTitle>
                     </CardHeader>

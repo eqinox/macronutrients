@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import MonosaccharidesDescription from "./monosaccharides-description";
+
 import DisaccharidesDescription from "./disaccharides-description";
+import MonosaccharidesDescription from "./monosacharides/monosaccharides-description";
 
 export default function SugarsDescription() {
     const [monosaccharidesOpen, setMonosaccharidesOpen] = useState(false);

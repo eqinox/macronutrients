@@ -127,3 +127,9 @@
     @apply font-sans;
     }
 }
+
+@layer components {
+  .window {
+    @apply h-72;
+  }
+}

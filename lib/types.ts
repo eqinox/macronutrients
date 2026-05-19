@@ -13,3 +13,20 @@ export interface FoodData {
     vitamins: Record<string, string>;
     minerals: Record<string, string>;
 }
+
+/** Key in `elementRegistry` for glossary / linked terms (e.g. glycemicIndex). */
+export type ElementId = string;
+
+export interface Element {
+    name: string;
+    description: string;
+    properties: {
+        action: string;
+        itemsAboutAction: {
+            startingPhrase: string;
+            /** When set, the starting phrase opens this term in a dialog. */
+            termId?: ElementId;
+            description: string;
+        }[];
+    }[];
+}
