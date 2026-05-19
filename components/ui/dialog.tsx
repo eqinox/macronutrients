@@ -16,15 +16,73 @@ const DRAG_IGNORE_SELECTOR =
 
 const DialogLayerContext = React.createContext(0)
 
+type DialogContentConfig = {
+  title: string
+  children: React.ReactNode
+  className?: string
+  showCloseButton?: boolean
+  draggable?: boolean
+  style?: React.CSSProperties
+  onInteractOutside?: React.ComponentProps<
+    typeof DialogPrimitive.Content
+  >["onInteractOutside"]
+  contentProps?: Omit<
+    React.ComponentProps<typeof DialogPrimitive.Content>,
+    "onInteractOutside"
+  >
+}
+
+type DialogContentRef = {
+  current: DialogContentConfig | null
+  subscribe: (listener: () => void) => () => void
+  set: (content: DialogContentConfig) => void
+}
+
+function createDialogContentRef(): DialogContentRef {
+  const listeners = new Set<() => void>()
+  const store: DialogContentRef = {
+    current: null,
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => listeners.delete(listener)
+    },
+    set: (content) => {
+      const previous = store.current
+      store.current = content
+      const metaChanged =
+        previous?.title !== content.title ||
+        previous?.className !== content.className
+      if (metaChanged) {
+        listeners.forEach((listener) => listener())
+      }
+    },
+  }
+  return store
+}
+
+type MountedDialog = {
+  contentRef: DialogContentRef
+  layer: number
+  modal: boolean
+  onOpenChange: (open: boolean) => void
+}
+
 interface DialogStackContextValue {
   register: (id: string) => void
   unregister: (id: string) => void
   stackSize: number
+  mountDialog: (id: string, dialog: MountedDialog) => void
+  unmountDialog: (id: string) => void
 }
 
 const DialogStackContext = React.createContext<DialogStackContextValue | null>(
   null
 )
+
+const DialogRegistrationContext = React.createContext<{
+  isOpen: boolean
+  setContentRef: (content: DialogContentConfig) => void
+} | null>(null)
 
 function useDialogStack() {
   const context = React.useContext(DialogStackContext)
@@ -32,33 +90,6 @@ function useDialogStack() {
     throw new Error("useDialogStack must be used within DialogStackProvider")
   }
   return context
-}
-
-function DialogStackProvider({ children }: { children: React.ReactNode }) {
-  const [openIds, setOpenIds] = React.useState<string[]>([])
-
-  const register = React.useCallback((id: string) => {
-    setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
-  }, [])
-
-  const unregister = React.useCallback((id: string) => {
-    setOpenIds((prev) => prev.filter((entry) => entry !== id))
-  }, [])
-
-  const value = React.useMemo(
-    () => ({
-      register,
-      unregister,
-      stackSize: openIds.length,
-    }),
-    [register, unregister, openIds.length]
-  )
-
-  return (
-    <DialogStackContext.Provider value={value}>
-      {children}
-    </DialogStackContext.Provider>
-  )
 }
 
 function useDraggableDialog() {
@@ -163,73 +194,6 @@ function useDraggableDialog() {
   }
 }
 
-function Dialog({
-  modal,
-  open,
-  defaultOpen,
-  onOpenChange,
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  const id = React.useId()
-  const parentLayer = React.useContext(DialogLayerContext)
-  const { register, unregister } = useDialogStack()
-  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(
-    defaultOpen ?? false
-  )
-
-  const isControlled = open !== undefined
-  const isOpen = isControlled ? open : uncontrolledOpen
-  const isNested = parentLayer > 0
-
-  React.useEffect(() => {
-    if (!isOpen) return
-    register(id)
-    return () => unregister(id)
-  }, [isOpen, id, register, unregister])
-
-  const layer = isOpen ? parentLayer + 1 : parentLayer
-
-  const handleOpenChange = (next: boolean) => {
-    if (!isControlled) {
-      setUncontrolledOpen(next)
-    }
-    onOpenChange?.(next)
-  }
-
-  return (
-    <DialogLayerContext.Provider value={layer}>
-      <DialogPrimitive.Root
-        data-slot="dialog"
-        open={isOpen}
-        onOpenChange={handleOpenChange}
-        modal={modal ?? !isNested}
-        {...props}
-      >
-        {children}
-      </DialogPrimitive.Root>
-    </DialogLayerContext.Provider>
-  )
-}
-
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-}
-
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
-
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
-}
-
 function DialogOverlay({
   className,
   style,
@@ -248,22 +212,16 @@ function DialogOverlay({
   )
 }
 
-function DialogContent({
-  className,
-  children,
+function DialogContentBody({
   title,
+  children,
+  className,
   showCloseButton = true,
   draggable = true,
   style,
   onInteractOutside,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  /** Accessible name for screen readers (rendered visually hidden). */
-  title: string
-  showCloseButton?: boolean
-  /** @default true */
-  draggable?: boolean
-}) {
+  contentProps,
+}: DialogContentConfig) {
   const layer = React.useContext(DialogLayerContext)
   const { stackSize } = useDialogStack()
   const { contentRef, offset, isDragging, handlePointerDown } =
@@ -287,12 +245,8 @@ function DialogContent({
         data-dragging={isDragging || undefined}
         style={{
           zIndex,
-          left: draggable
-            ? `calc(50% + ${offset.x}px)`
-            : "50%",
-          top: draggable
-            ? `calc(50% + ${offset.y}px)`
-            : "50%",
+          left: draggable ? `calc(50% + ${offset.x}px)` : "50%",
+          top: draggable ? `calc(50% + ${offset.y}px)` : "50%",
           transform: "translate(-50%, -50%)",
         }}
         onPointerDown={draggable ? handlePointerDown : undefined}
@@ -312,7 +266,7 @@ function DialogContent({
             }
             onInteractOutside?.(event)
           }}
-          {...props}
+          {...contentProps}
         >
           <DialogTitle className="sr-only">{title}</DialogTitle>
           {children}
@@ -332,6 +286,272 @@ function DialogContent({
       </div>
     </DialogPortal>
   )
+}
+
+function RootDialogInstance({
+  id,
+  dialog,
+  onClose,
+}: {
+  id: string
+  dialog: MountedDialog
+  onClose: (id: string) => void
+}) {
+  const [, setRenderTick] = React.useState(0)
+
+  React.useEffect(() => {
+    return dialog.contentRef.subscribe(() => {
+      setRenderTick((tick) => tick + 1)
+    })
+  }, [dialog.contentRef])
+
+  const handleOpenChange = (open: boolean) => {
+    dialog.onOpenChange(open)
+    if (!open) {
+      onClose(id)
+    }
+  }
+
+  const content = dialog.contentRef.current
+  if (!content) return null
+
+  return (
+    <DialogLayerContext.Provider value={dialog.layer}>
+      <DialogPrimitive.Root
+        data-slot="dialog"
+        open
+        onOpenChange={handleOpenChange}
+        modal={dialog.modal}
+      >
+        <DialogContentBody {...content} />
+      </DialogPrimitive.Root>
+    </DialogLayerContext.Provider>
+  )
+}
+
+function DialogStackProvider({ children }: { children: React.ReactNode }) {
+  const [openIds, setOpenIds] = React.useState<string[]>([])
+  const [mountedDialogs, setMountedDialogs] = React.useState<
+    Record<string, MountedDialog>
+  >({})
+
+  const register = React.useCallback((id: string) => {
+    setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
+  }, [])
+
+  const unregister = React.useCallback((id: string) => {
+    setOpenIds((prev) => prev.filter((entry) => entry !== id))
+  }, [])
+
+  const mountDialog = React.useCallback((id: string, dialog: MountedDialog) => {
+    setMountedDialogs((prev) => {
+      const existing = prev[id]
+      if (
+        existing &&
+        existing.contentRef === dialog.contentRef &&
+        existing.layer === dialog.layer &&
+        existing.modal === dialog.modal
+      ) {
+        return prev
+      }
+      return { ...prev, [id]: dialog }
+    })
+  }, [])
+
+  const unmountDialog = React.useCallback((id: string) => {
+    setMountedDialogs((prev) => {
+      if (!(id in prev)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
+  }, [])
+
+  const stackValue = React.useMemo(
+    () => ({
+      register,
+      unregister,
+      stackSize: openIds.length,
+      mountDialog,
+      unmountDialog,
+    }),
+    [register, unregister, openIds.length, mountDialog, unmountDialog]
+  )
+
+  return (
+    <DialogStackContext.Provider value={stackValue}>
+      {children}
+      {Object.entries(mountedDialogs).map(([id, dialog]) => (
+        <RootDialogInstance
+          key={id}
+          id={id}
+          dialog={dialog}
+          onClose={unmountDialog}
+        />
+      ))}
+    </DialogStackContext.Provider>
+  )
+}
+
+function Dialog({
+  modal,
+  open,
+  defaultOpen,
+  onOpenChange,
+  children,
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const id = React.useId()
+  const parentLayer = React.useContext(DialogLayerContext)
+  const { register, unregister, mountDialog, unmountDialog } = useDialogStack()
+  const contentRef = React.useRef<DialogContentRef | null>(null)
+  if (!contentRef.current) {
+    contentRef.current = createDialogContentRef()
+  }
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(
+    defaultOpen ?? false
+  )
+
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : uncontrolledOpen
+  const isNested = parentLayer > 0
+  const layer = isOpen ? parentLayer + 1 : parentLayer
+  const onOpenChangeRef = React.useRef(onOpenChange)
+  onOpenChangeRef.current = onOpenChange
+
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) {
+        setUncontrolledOpen(next)
+      }
+      onOpenChangeRef.current?.(next)
+      if (!next) {
+        unmountDialog(id)
+      }
+    },
+    [id, isControlled, unmountDialog]
+  )
+
+  const setContentRef = React.useCallback(
+    (content: DialogContentConfig) => {
+      contentRef.current?.set(content)
+    },
+    []
+  )
+
+  const registrationValue = React.useMemo(
+    () => ({
+      isOpen,
+      setContentRef,
+    }),
+    [isOpen, setContentRef]
+  )
+
+  React.useLayoutEffect(() => {
+    if (!isOpen) {
+      unmountDialog(id)
+      return
+    }
+
+    if (!contentRef.current?.current) return
+
+    mountDialog(id, {
+      contentRef: contentRef.current,
+      layer,
+      modal: modal ?? !isNested,
+      onOpenChange: handleOpenChange,
+    })
+    register(id)
+
+    return () => {
+      unregister(id)
+    }
+  }, [
+    isOpen,
+    id,
+    layer,
+    modal,
+    isNested,
+    mountDialog,
+    unmountDialog,
+    register,
+    unregister,
+    handleOpenChange,
+  ])
+
+  return (
+    <DialogRegistrationContext.Provider value={registrationValue}>
+      <DialogLayerContext.Provider value={layer}>
+        {children}
+      </DialogLayerContext.Provider>
+    </DialogRegistrationContext.Provider>
+  )
+}
+
+function DialogTrigger({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+}
+
+function DialogPortal({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+}
+
+function DialogClose({
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+function DialogContent({
+  className,
+  children,
+  title,
+  showCloseButton = true,
+  draggable = true,
+  style,
+  onInteractOutside,
+  ...contentProps
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  title: string
+  showCloseButton?: boolean
+  draggable?: boolean
+}) {
+  const registration = React.useContext(DialogRegistrationContext)
+
+  React.useLayoutEffect(() => {
+    if (!registration) return
+
+    registration.setContentRef({
+      title,
+      children,
+      className,
+      showCloseButton,
+      draggable,
+      style,
+      onInteractOutside,
+      contentProps,
+    })
+  })
+
+  if (!registration) {
+    return (
+      <DialogContentBody
+        title={title}
+        children={children}
+        className={className}
+        showCloseButton={showCloseButton}
+        draggable={draggable}
+        style={style}
+        onInteractOutside={onInteractOutside}
+        contentProps={contentProps}
+      />
+    )
+  }
+
+  return null
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
