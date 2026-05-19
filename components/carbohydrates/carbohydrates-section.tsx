@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent } from "../ui/dialog";
 import Food from "../food";
 import Details from "../details";
 import { FoodData } from "@/lib/types";
@@ -47,19 +47,18 @@ export default function CarbohydratesSection() {
             </Card>
 
             <Dialog open={!!selectedFood} onOpenChange={(open) => !open && setSelectedFood(null)}>
-                <DialogTitle>
-                    <DialogContent className="w-xl">
-                        {selectedFood && <Details food={selectedFood} />}
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent
+                    title={selectedFood ? `${selectedFood.name} - Детайли` : "Детайли"}
+                    className="w-xl"
+                >
+                    {selectedFood && <Details food={selectedFood} />}
+                </DialogContent>
             </Dialog>
 
             <Dialog open={isSugarsOpen} onOpenChange={setIsSugarsOpen}>
-                <DialogTitle>
-                    <DialogContent className="w-xl">
-                        <CarbohydratesDescription />
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent title="Въглехидрати" className="w-xl">
+                    <CarbohydratesDescription />
+                </DialogContent>
             </Dialog>
         </>
     );

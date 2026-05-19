@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent } from "../ui/dialog";
 import SugarsDescription from "./sugars/sugars-description";
 import StarchesDescription from "./starches/starches-description";
 
@@ -36,20 +36,15 @@ export default function CarbohydratesDescription() {
             </CardContent>
 
             <Dialog open={sugarsOpen} onOpenChange={(open) => !open && setSugarsOpen(false)}>
-                <DialogTitle>
-                    <DialogContent>
-                        <SugarsDescription />
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent title="Захари">
+                    <SugarsDescription />
+                </DialogContent>
             </Dialog>
 
-
             <Dialog open={starchOpen} onOpenChange={(open) => !open && setStarchOpen(false)}>
-                <DialogTitle>
-                    <DialogContent>
-                        <StarchesDescription />
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent title="Нишестета">
+                    <StarchesDescription />
+                </DialogContent>
             </Dialog>
         </Card>
     )

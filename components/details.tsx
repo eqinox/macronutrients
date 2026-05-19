@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { ScrollArea } from "./ui/scroll-area";
-import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent } from "./ui/dialog";
 import { EssentialAminoAcids, NonEssentialAminoAcids } from "@/lib/enums/aminoAcids";
 import { AminoMap } from "@/lib/aminoAcidMappings";
 
@@ -38,6 +38,11 @@ export default function Details({ food }: { food: FoodData }) {
         .filter((entry): entry is [keyof typeof EssentialAminoAcids, number] => entry[1] !== undefined)
         .sort((a, b) => b[1] - a[1]));
     const ActiveAminoModal = selectedAminoAcid ? AminoMap[selectedAminoAcid] : null;
+    const selectedAminoAcidTitle = selectedAminoAcid
+        ? (selectedAminoAcid in EssentialAminoAcids
+            ? EssentialAminoAcids[selectedAminoAcid as keyof typeof EssentialAminoAcids]
+            : NonEssentialAminoAcids[selectedAminoAcid as keyof typeof NonEssentialAminoAcids])
+        : "Аминокиселина";
     const aminoAcidsNonEssential = (Object.entries(food.aminoAcids.nonEssential)
         .filter((entry): entry is [keyof typeof NonEssentialAminoAcids, number] => entry[1] !== undefined)
         .sort((a, b) => b[1] - a[1]));
@@ -142,11 +147,9 @@ export default function Details({ food }: { food: FoodData }) {
                 </ScrollArea>
             </Card>
             <Dialog open={!!selectedAminoAcid} onOpenChange={(open) => !open && setSelectedAminoAcid(null)}>
-                <DialogTitle>
-                    <DialogContent className="">
-                        {ActiveAminoModal ? <ActiveAminoModal /> : null}
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent title={selectedAminoAcidTitle} className="">
+                    {ActiveAminoModal ? <ActiveAminoModal /> : null}
+                </DialogContent>
             </Dialog>
         </>
     );

@@ -13,7 +13,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getElementById } from "@/data/carbohydrate-elements";
 import type { Element, ElementId } from "@/lib/types";
@@ -116,10 +116,10 @@ export function ElementView({ element }: ElementViewProps) {
                 open={!!termElement}
                 onOpenChange={(open) => !open && setOpenTermId(null)}
             >
-                <DialogContent className="w-xl max-h-[85vh] overflow-y-auto">
-                    <DialogTitle className="sr-only">
-                        {termElement?.name}
-                    </DialogTitle>
+                <DialogContent
+                    title={termElement?.name ?? "Термин"}
+                    className="w-xl max-h-[85vh] overflow-y-auto"
+                >
                     {termElement ? (
                         <ElementView element={termElement} />
                     ) : null}

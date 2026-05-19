@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
 import { EssentialAminoAcids } from "../../../lib/enums/aminoAcids";
-import { Dialog, DialogContent, DialogTitle } from "../../ui/dialog";
+import { Dialog, DialogContent } from "../../ui/dialog";
 import { AminoMap } from "@/lib/aminoAcidMappings";
 import { useState } from "react";
 
@@ -30,11 +30,12 @@ export default function AminoacidEssentials() {
             </CardContent>
 
             <Dialog open={!!selectedAminoAcid} onOpenChange={(open) => !open && setSelectedAminoAcid(null)}>
-                <DialogTitle>
-                    <DialogContent className="">
-                        {ActiveAminoModal ? <ActiveAminoModal /> : null}
-                    </DialogContent>
-                </DialogTitle>
+                <DialogContent
+                    title={selectedAminoAcid ? EssentialAminoAcids[selectedAminoAcid] : "Аминокиселина"}
+                    className=""
+                >
+                    {ActiveAminoModal ? <ActiveAminoModal /> : null}
+                </DialogContent>
             </Dialog>
         </Card>
     )
