@@ -15,17 +15,23 @@ export default function SugarsDescription() {
                 <CardDescription>
                     Делят се на монозахариди и дизахариди
                 </CardDescription>
-                <CardContent>
-                    <ul>
-                        <li className="cursor-pointer hover:underline" onClick={() => setMonosaccharidesOpen(true)}>
-                            Монозахариди
-                        </li>
-                        <li className="cursor-pointer hover:underline" onClick={() => setDisaccharidesOpen(true)}>
-                            Дизахариди
-                        </li>
-                    </ul>
-                </CardContent>
             </CardHeader>
+            <CardContent>
+                <ul>
+                    <li
+                        className="cursor-pointer hover:underline"
+                        onClick={() => setMonosaccharidesOpen(true)}
+                    >
+                        Монозахариди
+                    </li>
+                    <li
+                        className="cursor-pointer hover:underline"
+                        onClick={() => setDisaccharidesOpen(true)}
+                    >
+                        Дизахариди
+                    </li>
+                </ul>
+            </CardContent>
 
             <Dialog open={monosaccharidesOpen} onOpenChange={(open) => !open && setMonosaccharidesOpen(false)}>
                 <DialogContent title="Монозахариди">

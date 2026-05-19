@@ -1,19 +1,28 @@
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FiberTopics } from "@/lib/enums/carbohydrates";
+import { FiberTopicMap } from "@/lib/carbohydrateMappings";
+import { CarbohydrateTopicList } from "../carbohydrate-topic-list";
 
 export default function FibersDescription() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Фибри</CardTitle>
-                <CardDescription>
-                    <ul>
-                        <li>
-                            Фибри са непреработени въглехидрати, които не се усвояват от организма
-                        </li>
-                    </ul>
+    const items = Object.entries(FiberTopics) as Array<
+        [keyof typeof FiberTopics, string]
+    >;
 
-                </CardDescription>
-            </CardHeader>
-        </Card>
-    )
+    return (
+        <CarbohydrateTopicList
+            title="Фибри"
+            description={
+                <ul>
+                    <li>
+                        Фибрите са въглехидрати, които не се усвояват в тънките
+                        черва
+                    </li>
+                    <li>
+                        Подпомагат храносмилането, ситостта и здравето на червата
+                    </li>
+                </ul>
+            }
+            items={items}
+            componentMap={FiberTopicMap}
+        />
+    );
 }
