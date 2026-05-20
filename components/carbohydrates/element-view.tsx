@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getElementById } from "@/data/carbohydrate-elements";
+import { getElementById } from "@/lib/element-registry";
 import type { Element, ElementId } from "@/lib/types";
 import { RichText } from "./rich-text";
 

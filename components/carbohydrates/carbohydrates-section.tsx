@@ -21,7 +21,7 @@ export default function CarbohydratesSection() {
         <>
             <Card className="max-w-md">
                 <CardHeader>
-                    <CardTitle className="cursor-pointer hover:udnerline" onClick={() => handleCarbohydratesClick()}>
+                    <CardTitle className="cursor-pointer hover:underline" onClick={() => handleCarbohydratesClick()}>
                         Въглехидрати
                     </CardTitle>
                     <CardDescription>

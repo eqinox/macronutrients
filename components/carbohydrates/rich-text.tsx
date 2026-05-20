@@ -1,5 +1,5 @@
 import { parseRichText } from "@/lib/parse-rich-text";
-import { getElementById } from "@/data/carbohydrate-elements";
+import { getElementById } from "@/lib/element-registry";
 import type { ElementId } from "@/lib/types";
 
 interface RichTextProps {

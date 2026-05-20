@@ -1,6 +1,6 @@
 import CarbohydratesSection from "@/components/carbohydrates/carbohydrates-section"
+import FatsSection from "@/components/fats/fats-section"
 import ProteinsSection from "@/components/proteins/proteins-section"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata = {
   title: "Макронутриенти",
@@ -22,13 +22,7 @@ export default function Page() {
         </CardHeader>
       </Card> */}
 
-      <Card className="max-w-md">
-        <CardHeader>
-          <CardTitle>
-            Мазнини
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      <FatsSection />
     </div>
   )
 }
