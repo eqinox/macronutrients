@@ -671,7 +671,7 @@ function DialogContentBody({
           <div
             data-slot="dialog-scroll-body"
             className={cn(
-              "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4",
+              "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4 [scrollbar-gutter:stable]",
               isInteracting && "overflow-y-hidden"
             )}
           >
