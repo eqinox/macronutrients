@@ -94,6 +94,7 @@ function useDialogStack() {
 
 function useDraggableDialog() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 })
+  const [isGrabbed, setIsGrabbed] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
   const offsetRef = React.useRef(offset)
   const contentRef = React.useRef<HTMLDivElement>(null)
@@ -115,6 +116,7 @@ function useDraggableDialog() {
     const observer = new MutationObserver(() => {
       if (el.getAttribute("data-state") === "closed") {
         setOffset({ x: 0, y: 0 })
+        setIsGrabbed(false)
         setIsDragging(false)
         dragRef.current = null
       }
@@ -137,6 +139,8 @@ function useDraggableDialog() {
       if (positioner.setPointerCapture) {
         positioner.setPointerCapture(pointerId)
       }
+
+      setIsGrabbed(true)
 
       dragRef.current = {
         pointerId,
@@ -171,6 +175,7 @@ function useDraggableDialog() {
       const endDrag = () => {
         const wasDragged = dragRef.current?.active ?? false
         dragRef.current = null
+        setIsGrabbed(false)
         setIsDragging(false)
 
         if (positioner.hasPointerCapture?.(pointerId)) {
@@ -201,6 +206,7 @@ function useDraggableDialog() {
   return {
     contentRef,
     offset,
+    isGrabbed,
     isDragging,
     handlePointerDown,
   }
@@ -235,11 +241,12 @@ function DialogContentBody({
   contentProps,
 }: DialogContentConfig) {
   const layer = React.useContext(DialogLayerContext)
-  const { contentRef, offset, isDragging, handlePointerDown } =
+  const { contentRef, offset, isGrabbed, isDragging, handlePointerDown } =
     useDraggableDialog()
 
   const zIndex = DIALOG_BASE_Z + layer * DIALOG_Z_STEP
   const showOverlay = false
+  const isActiveDrag = isGrabbed || isDragging
 
   return (
     <DialogPortal>
@@ -248,7 +255,13 @@ function DialogContentBody({
       ) : null}
       <div
         data-slot="dialog-positioner"
-        className="fixed top-1/2 left-1/2 w-[calc(100vw-2rem)] max-w-sm sm:max-w-md"
+        data-grabbed={isGrabbed || undefined}
+        data-dragging={isDragging || undefined}
+        className={cn(
+          "fixed top-1/2 left-1/2 w-[calc(100vw-2rem)] max-w-sm transition-[box-shadow,transform] duration-150 sm:max-w-md",
+          isGrabbed && "drop-shadow-lg",
+          isDragging && "drop-shadow-2xl"
+        )}
         style={{
           zIndex,
           left: draggable ? `calc(50% + ${offset.x}px)` : "50%",
@@ -259,10 +272,17 @@ function DialogContentBody({
         <DialogPrimitive.Content
           ref={contentRef}
           data-slot="dialog-content"
+          data-grabbed={isGrabbed || undefined}
           data-dragging={isDragging || undefined}
           style={style}
           className={cn(
-            "relative grid max-h-[min(85dvh,calc(100dvh-2rem))] w-full min-w-0 gap-4 overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl bg-popover p-4 pt-8 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "relative grid max-h-[min(85dvh,calc(100dvh-2rem))] w-full min-w-0 gap-4 overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl bg-popover p-4 pt-14 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-150 outline-none sm:pt-10",
+            "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            isGrabbed &&
+              "ring-2 ring-primary/50 shadow-md",
+            isDragging &&
+              "ring-2 ring-primary shadow-xl scale-[1.01]",
+            isActiveDrag && "overflow-y-hidden",
             className
           )}
           onInteractOutside={(event) => {
@@ -277,14 +297,40 @@ function DialogContentBody({
           {draggable ? (
             <div
               data-slot="dialog-drag-handle"
-              aria-hidden
-              className="absolute top-1.5 left-1/2 z-10 -translate-x-1/2 touch-none cursor-grab active:cursor-grabbing"
+              aria-label="Премести прозореца"
+              data-grabbed={isGrabbed || undefined}
+              data-dragging={isDragging || undefined}
+              className={cn(
+                "absolute inset-x-0 top-0 z-10 flex touch-none cursor-grab flex-col items-center justify-center gap-1 rounded-t-xl border-b transition-colors duration-150 select-none",
+                "h-12 sm:h-8",
+                "border-border/30 bg-muted/35 active:cursor-grabbing sm:bg-muted/20",
+                isGrabbed &&
+                  "cursor-grabbing border-primary/40 bg-primary/10",
+                isDragging &&
+                  "cursor-grabbing border-primary/60 bg-primary/15"
+              )}
               onPointerDown={(event) => {
                 event.preventDefault()
                 handlePointerDown(event)
               }}
             >
-              <span className="block h-1 w-10 rounded-full bg-muted-foreground/35" />
+              <span
+                className={cn(
+                  "block rounded-full bg-muted-foreground/45 transition-all duration-150",
+                  "h-1.5 w-14 sm:h-1 sm:w-10",
+                  isGrabbed && "w-16 bg-primary/70",
+                  isDragging && "w-20 bg-primary"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-[10px] font-medium tracking-wide text-muted-foreground uppercase transition-opacity duration-150 sm:hidden",
+                  isGrabbed ? "text-primary opacity-100" : "opacity-70",
+                  isDragging && "text-primary"
+                )}
+              >
+                {isDragging ? "Премества се" : "Задръж и влачи"}
+              </span>
             </div>
           ) : null}
           <DialogTitle className="sr-only">{title}</DialogTitle>
