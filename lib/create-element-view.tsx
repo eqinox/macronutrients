@@ -2,7 +2,9 @@ import type { ComponentType } from "react";
 import { ElementView } from "@/components/carbohydrates/element-view";
 import type { Element } from "@/lib/types";
 
-export function createElementView(element: Element): ComponentType {
+export function createElementView(
+    element: Element,
+): ComponentType<Record<string, never>> {
     function ElementTopicView() {
         return <ElementView element={element} />;
     }

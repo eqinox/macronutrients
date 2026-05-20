@@ -1,12 +1,20 @@
-import { useState, type ComponentType, type ReactNode } from "react";
+import {
+    createElement,
+    useState,
+    type ComponentType,
+    type ReactNode,
+} from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+/** Topic views are always prop-less (from createElementView or thin wrappers). */
+type TopicComponent = ComponentType<Record<string, never>>;
 
 interface TopicListDialogProps<T extends string> {
     title: string;
     description: ReactNode;
     items: Array<[T, string]>;
-    componentMap: Record<T, ComponentType>;
+    componentMap: Record<T, TopicComponent>;
 }
 
 export function TopicListDialog<T extends string>({
@@ -16,7 +24,6 @@ export function TopicListDialog<T extends string>({
     componentMap,
 }: TopicListDialogProps<T>) {
     const [selected, setSelected] = useState<T | null>(null);
-    const ActiveComponent = selected ? componentMap[selected] : null;
     const selectedLabel = selected
         ? items.find(([key]) => key === selected)?.[1]
         : title;
@@ -46,7 +53,7 @@ export function TopicListDialog<T extends string>({
                 onOpenChange={(open) => !open && setSelected(null)}
             >
                 <DialogContent title={selectedLabel ?? title}>
-                    {ActiveComponent ? <ActiveComponent /> : null}
+                    {selected ? createElement(componentMap[selected]) : null}
                 </DialogContent>
             </Dialog>
         </Card>
