@@ -44,7 +44,7 @@ export function ElementView({ element }: ElementViewProps) {
 
     return (
         <>
-            <Card>
+            <Card className="min-w-0 w-full">
                 <ScrollArea className="window">
                     <CardHeader>
                         <CardTitle>{element.name}</CardTitle>
@@ -116,10 +116,7 @@ export function ElementView({ element }: ElementViewProps) {
                 open={!!termElement}
                 onOpenChange={(open) => !open && setOpenTermId(null)}
             >
-                <DialogContent
-                    title={termElement?.name ?? "Термин"}
-                    className="w-xl max-h-[85vh] overflow-y-auto"
-                >
+                <DialogContent title={termElement?.name ?? "Термин"}>
                     {termElement ? (
                         <ElementView element={termElement} />
                     ) : null}

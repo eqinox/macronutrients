@@ -130,6 +130,6 @@
 
 @layer components {
   .window {
-    @apply h-72;
+    @apply max-h-72 overflow-y-auto;
   }
 }

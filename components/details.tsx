@@ -49,7 +49,7 @@ export default function Details({ food }: { food: FoodData }) {
 
     return (
         <>
-            <Card className="max-w-md ml-4">
+            <Card className="min-w-0 w-full max-w-full border-0 shadow-none">
                 <ScrollArea className="window">
                     <CardHeader>
                         <CardTitle>{food.name} - Детайли</CardTitle>
@@ -73,8 +73,8 @@ export default function Details({ food }: { food: FoodData }) {
                                 </Button>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
-                                <ScrollArea className="h-50 max-w-75 rounded-md border p-4">
-                                    <div className="grid grid-cols-2 gap-2">
+                                <ScrollArea className="max-h-50 w-full rounded-md border p-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div>
                                             <h5>Незаменими:</h5>
                                             <ul>
@@ -112,7 +112,7 @@ export default function Details({ food }: { food: FoodData }) {
                                 </Button>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
-                                <ScrollArea className="h-50 max-w-75 rounded-md border p-4">
+                                <ScrollArea className="max-h-50 w-full rounded-md border p-4">
                                     <ul>
                                         {Object.entries(food.vitamins).map(([key, value]) => (
                                             <li key={key}>{key}: {value}</li>
@@ -134,7 +134,7 @@ export default function Details({ food }: { food: FoodData }) {
                                 </Button>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
-                                <ScrollArea className="h-50 max-w-75 rounded-md border p-4">
+                                <ScrollArea className="max-h-50 w-full rounded-md border p-4">
                                     <ul>
                                         {Object.entries(food.minerals).map(([key, value]) => (
                                             <li key={key}>{key}: {value}</li>

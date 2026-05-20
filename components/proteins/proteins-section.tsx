@@ -49,14 +49,13 @@ export default function ProteinsSection() {
             <Dialog open={!!selectedFood} onOpenChange={(open) => !open && setSelectedFood(null)}>
                 <DialogContent
                     title={selectedFood ? `${selectedFood.name} - Детайли` : "Детайли"}
-                    className="w-xl"
                 >
                     {selectedFood && <Details food={selectedFood} />}
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isAminoOpen} onOpenChange={setIsAminoOpen}>
-                <DialogContent title="Аминокиселини" className="w-xl">
+                <DialogContent title="Аминокиселини">
                     <AminoacidDescription />
                 </DialogContent>
             </Dialog>

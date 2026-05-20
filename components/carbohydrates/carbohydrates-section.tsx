@@ -49,14 +49,13 @@ export default function CarbohydratesSection() {
             <Dialog open={!!selectedFood} onOpenChange={(open) => !open && setSelectedFood(null)}>
                 <DialogContent
                     title={selectedFood ? `${selectedFood.name} - Детайли` : "Детайли"}
-                    className="w-xl"
                 >
                     {selectedFood && <Details food={selectedFood} />}
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isSugarsOpen} onOpenChange={setIsSugarsOpen}>
-                <DialogContent title="Въглехидрати" className="w-xl">
+                <DialogContent title="Въглехидрати">
                     <CarbohydratesDescription />
                 </DialogContent>
             </Dialog>

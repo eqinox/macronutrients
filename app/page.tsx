@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 overflow-x-hidden p-4 sm:p-6">
       <h1 className="text-2xl font-bold">Хранене и нутриенти</h1>
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2 xl:items-start">

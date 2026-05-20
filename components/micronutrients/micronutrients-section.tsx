@@ -35,7 +35,7 @@ export default function MicronutrientsSection() {
             </Card>
 
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                <DialogContent title="Микронутриенти" className="w-xl">
+                <DialogContent title="Микронутриенти">
                     <MicronutrientsDescription />
                 </DialogContent>
             </Dialog>

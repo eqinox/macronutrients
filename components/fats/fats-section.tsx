@@ -37,7 +37,7 @@ export default function FatsSection() {
             </Card>
 
             <Dialog open={isFatsOpen} onOpenChange={setIsFatsOpen}>
-                <DialogContent title="Мазнини" className="w-xl">
+                <DialogContent title="Мазнини">
                     <FatsDescription />
                 </DialogContent>
             </Dialog>

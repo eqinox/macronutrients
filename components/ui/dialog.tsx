@@ -92,6 +92,32 @@ function useDialogStack() {
   return context
 }
 
+function useBodyScrollLock(active: boolean) {
+  React.useEffect(() => {
+    if (!active) return
+
+    const scrollY = window.scrollY
+    const { style } = document.body
+
+    style.position = "fixed"
+    style.top = `-${scrollY}px`
+    style.left = "0"
+    style.right = "0"
+    style.overflow = "hidden"
+    style.width = "100%"
+
+    return () => {
+      style.position = ""
+      style.top = ""
+      style.left = ""
+      style.right = ""
+      style.overflow = ""
+      style.width = ""
+      window.scrollTo(0, scrollY)
+    }
+  }, [active])
+}
+
 function useDraggableDialog() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = React.useState(false)
@@ -131,7 +157,13 @@ function useDraggableDialog() {
 
       event.stopPropagation()
 
+      const positioner = event.currentTarget
       const pointerId = event.pointerId
+
+      if (positioner.setPointerCapture) {
+        positioner.setPointerCapture(pointerId)
+      }
+
       dragRef.current = {
         pointerId,
         startX: event.clientX,
@@ -152,8 +184,9 @@ function useDraggableDialog() {
           if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) return
           drag.active = true
           setIsDragging(true)
-          moveEvent.preventDefault()
         }
+
+        moveEvent.preventDefault()
 
         setOffset({
           x: drag.originX + deltaX,
@@ -165,6 +198,11 @@ function useDraggableDialog() {
         const wasDragged = dragRef.current?.active ?? false
         dragRef.current = null
         setIsDragging(false)
+
+        if (positioner.hasPointerCapture?.(pointerId)) {
+          positioner.releasePointerCapture(pointerId)
+        }
+
         window.removeEventListener("pointermove", onPointerMove)
         window.removeEventListener("pointerup", endDrag)
         window.removeEventListener("pointercancel", endDrag)
@@ -179,7 +217,7 @@ function useDraggableDialog() {
         }
       }
 
-      window.addEventListener("pointermove", onPointerMove)
+      window.addEventListener("pointermove", onPointerMove, { passive: false })
       window.addEventListener("pointerup", endDrag)
       window.addEventListener("pointercancel", endDrag)
     },
@@ -229,6 +267,7 @@ function DialogContentBody({
 
   const zIndex = DIALOG_BASE_Z + layer * DIALOG_Z_STEP
   const showOverlay = stackSize === 1
+  const isTopDialog = layer === stackSize
 
   return (
     <DialogPortal>
@@ -237,26 +276,21 @@ function DialogContentBody({
       ) : null}
       <div
         data-slot="dialog-positioner"
-        className={cn(
-          "fixed top-1/2 left-1/2 w-full max-w-[calc(100%-2rem)] sm:max-w-sm",
-          draggable &&
-            "cursor-grab data-[dragging=true]:cursor-grabbing data-[dragging=true]:select-none"
-        )}
-        data-dragging={isDragging || undefined}
+        className="fixed top-1/2 left-1/2 w-[calc(100vw-2rem)] max-w-sm sm:max-w-md"
         style={{
           zIndex,
           left: draggable ? `calc(50% + ${offset.x}px)` : "50%",
           top: draggable ? `calc(50% + ${offset.y}px)` : "50%",
           transform: "translate(-50%, -50%)",
         }}
-        onPointerDown={draggable ? handlePointerDown : undefined}
       >
         <DialogPrimitive.Content
           ref={contentRef}
           data-slot="dialog-content"
+          data-dragging={isDragging || undefined}
           style={style}
           className={cn(
-            "relative grid w-full gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "relative grid max-h-[min(85dvh,calc(100dvh-2rem))] w-full min-w-0 gap-4 overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl bg-popover p-4 pt-8 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           onInteractOutside={(event) => {
@@ -268,13 +302,26 @@ function DialogContentBody({
           }}
           {...contentProps}
         >
+          {draggable && isTopDialog ? (
+            <div
+              data-slot="dialog-drag-handle"
+              aria-hidden
+              className="absolute top-1.5 left-1/2 z-10 -translate-x-1/2 touch-none cursor-grab active:cursor-grabbing"
+              onPointerDown={(event) => {
+                event.preventDefault()
+                handlePointerDown(event)
+              }}
+            >
+              <span className="block h-1 w-10 rounded-full bg-muted-foreground/35" />
+            </div>
+          ) : null}
           <DialogTitle className="sr-only">{title}</DialogTitle>
           {children}
           {showCloseButton ? (
             <DialogPrimitive.Close data-slot="dialog-close" asChild>
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2 cursor-default"
+                className="absolute top-2 right-2 z-20 cursor-default"
                 size="icon-sm"
               >
                 <XIcon />
@@ -334,6 +381,8 @@ function DialogStackProvider({ children }: { children: React.ReactNode }) {
   const [mountedDialogs, setMountedDialogs] = React.useState<
     Record<string, MountedDialog>
   >({})
+
+  useBodyScrollLock(openIds.length > 0)
 
   const register = React.useCallback((id: string) => {
     setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
