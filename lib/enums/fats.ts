@@ -1,5 +1,6 @@
 export const MainFatTopics = {
     Overview: "Роля на мазнините",
+    Triglyceride: "Триглицерид",
     Saturated: "Наситени мазнини",
     Unsaturated: "Ненаситени мазнини",
     Trans: "Транс мазнини",
@@ -12,6 +13,8 @@ export const UnsaturatedFatTopics = {
 } as const;
 
 export const PolyunsaturatedFatTopics = {
+    Overview: "Какво са полиненаситените",
+    EssentialFattyAcids: "Незаменими мастни киселини",
     Omega3: "Омега-3",
     Omega6: "Омега-6",
 } as const;

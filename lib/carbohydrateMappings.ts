@@ -1,36 +1,45 @@
-import Glucose from "@/components/carbohydrates/sugars/monosacharides/glucose";
-import Fructose from "@/components/carbohydrates/sugars/monosacharides/fructose";
-import Galactose from "@/components/carbohydrates/sugars/monosacharides/galactose";
-import Sucrose from "@/components/carbohydrates/sugars/disaccharides/sucrose";
-import Lactose from "@/components/carbohydrates/sugars/disaccharides/lactose";
-import Maltose from "@/components/carbohydrates/sugars/disaccharides/maltose";
-import StarchOverview from "@/components/carbohydrates/starches/starch-overview";
-import StarchDigestion from "@/components/carbohydrates/starches/starch-digestion";
-import StarchSources from "@/components/carbohydrates/starches/starch-sources";
-import FiberOverview from "@/components/carbohydrates/fibers/fiber-overview";
-import SolubleFiber from "@/components/carbohydrates/fibers/soluble-fiber";
-import InsolubleFiber from "@/components/carbohydrates/fibers/insoluble-fiber";
+import { createElementView } from "@/lib/create-element-view";
+import {
+    fiberOverview,
+    fructose,
+    galactose,
+    glucose,
+    glycemicIndex,
+    glycemicLoad,
+    insolubleFiber,
+    lactose,
+    maltose,
+    resistantStarch,
+    solubleFiber,
+    starchDigestion,
+    starchOverview,
+    starchSources,
+    sucrose,
+} from "@/data/carbohydrate-elements";
 
 export const MonosaccharideMap = {
-  Glucose,
-  Fructose,
-  Galactose,
+    Glucose: createElementView(glucose),
+    Fructose: createElementView(fructose),
+    Galactose: createElementView(galactose),
 } as const;
 
 export const DisaccharideMap = {
-  Sucrose,
-  Lactose,
-  Maltose,
+    Sucrose: createElementView(sucrose),
+    Lactose: createElementView(lactose),
+    Maltose: createElementView(maltose),
 } as const;
 
 export const StarchTopicMap = {
-  Overview: StarchOverview,
-  Digestion: StarchDigestion,
-  Sources: StarchSources,
+    Overview: createElementView(starchOverview),
+    Digestion: createElementView(starchDigestion),
+    Sources: createElementView(starchSources),
+    GlycemicIndex: createElementView(glycemicIndex),
+    GlycemicLoad: createElementView(glycemicLoad),
+    ResistantStarch: createElementView(resistantStarch),
 } as const;
 
 export const FiberTopicMap = {
-  Overview: FiberOverview,
-  Soluble: SolubleFiber,
-  Insoluble: InsolubleFiber,
+    Overview: createElementView(fiberOverview),
+    Soluble: createElementView(solubleFiber),
+    Insoluble: createElementView(insolubleFiber),
 } as const;

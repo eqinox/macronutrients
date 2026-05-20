@@ -14,6 +14,9 @@ export const StarchTopics = {
   Overview: "Какво е нишесте",
   Digestion: "Разграждане и усвояване",
   Sources: "Източници в храната",
+  GlycemicIndex: "Гликемичен индекс",
+  GlycemicLoad: "Гликемично натоварване",
+  ResistantStarch: "Резистентно нишесте",
 } as const;
 
 export const FiberTopics = {

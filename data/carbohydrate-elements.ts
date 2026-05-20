@@ -11,12 +11,86 @@ export const glycemicIndex: Element = {
                 {
                     startingPhrase: "Нисък (до 55)",
                     description:
-                        "Храните се усвояват по-бавно. Подходящи са за по-стабилна енергия и по-малки скокове в кръвната захар.",
+                        "Овес, ябълки, леща, боб – по-бавно покачване на захарта.",
+                },
+                {
+                    startingPhrase: "Среден (56–69)",
+                    description:
+                        "Банан, кафяв ориз, царевица – умерено покачване.",
                 },
                 {
                     startingPhrase: "Висок (над 70)",
                     description:
-                        "Предизвикват по-бързо покачване на кръвната захар. Често срещани при преработени въглехидрати и сладки напитки.",
+                        "Бял хляб, картофи, бял ориз, сладки напитки – бърз скок в кръвната захар.",
+                },
+            ],
+        },
+    ],
+};
+
+export const glycemicLoad: Element = {
+    name: "Гликемично натоварване",
+    description:
+        "Отчита и {{glycemicIndex|гликемичния индекс}}, и количеството въглехидрати в порцията. По-полезен от самия GI при реално хранене.",
+    properties: [
+        {
+            action: "Как се изчислява",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Формула",
+                    description:
+                        "GL = (GI × грамове въглехидрати в порция) ÷ 100.",
+                },
+                {
+                    startingPhrase: "Пример",
+                    description:
+                        "Водният пъпеш има висок GI, но малко въглехидрати на парче → ниско GL.",
+                },
+            ],
+        },
+        {
+            action: "Интерпретация",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Ниско (до 10)",
+                    description: "Малък ефект върху кръвната захар за порцията.",
+                },
+                {
+                    startingPhrase: "Високо (над 20)",
+                    description:
+                        "Голяма порция с висок GI – по-голям скок в захарта.",
+                },
+            ],
+        },
+    ],
+};
+
+export const resistantStarch: Element = {
+    name: "Резистентно нишесте",
+    description:
+        "Вид нишесте, което не се разгражда в тънките черва и действа подобно на {{fiberOverview|фибри}} – подхранва полезни бактерии.",
+    properties: [
+        {
+            action: "Източници",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Охладени нишестени храни",
+                    description:
+                        "Охладен картоф, ориз или паста – част от нишестето става резистентно.",
+                },
+                {
+                    startingPhrase: "Зелени банани и бобови",
+                    description: "Незрели банани, леща, нахут, боб.",
+                },
+            ],
+        },
+        {
+            action: "Ползи",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Черва и ситост",
+                    description:
+                        "Подпомага микробиома, ситостта и по-стабилна кръвна захар.",
                 },
             ],
         },
@@ -515,6 +589,8 @@ export const insolubleFiber: Element = {
 
 const elementRegistry: Record<ElementId, Element> = {
     glycemicIndex,
+    glycemicLoad,
+    resistantStarch,
     glucose,
     fructose,
     galactose,

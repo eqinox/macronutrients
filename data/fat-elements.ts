@@ -58,9 +58,9 @@ export const fatsOverview: Element = {
                 },
                 {
                     startingPhrase: "Ненаситени",
-                    termId: "monounsaturatedFat",
+                    termId: "unsaturatedFat",
                     description:
-                        "Включват {{monounsaturatedFat|моно-}} и {{omega3|омега-3}}/{{omega6|омега-6}} полиненаситени.",
+                        "Включват {{monounsaturatedFat|мононенаситени}} и {{polyunsaturatedFat|полиненаситени}} ({{omega3|омега-3}}, {{omega6|омега-6}}).",
                 },
                 {
                     startingPhrase: "Транс",
@@ -104,6 +104,100 @@ export const saturatedFat: Element = {
                     startingPhrase: "Баланс",
                     description:
                         "Комбинирай с {{monounsaturatedFat|мононенаситени}} и {{omega3|омега-3}} за по-добър липиден профил.",
+                },
+            ],
+        },
+    ],
+};
+
+export const unsaturatedFat: Element = {
+    name: "Ненаситени мазнини",
+    description:
+        "Мастни киселини с поне една двойна връзка. Обикновено са течни на стайна температура и се считат за по-благоприятни от наситените при умерена консумация.",
+    properties: [
+        {
+            action: "Две основни групи",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Мононенаситени",
+                    termId: "monounsaturatedFat",
+                    description:
+                        "Една двойна връзка – зехтин, авокадо, ядки.",
+                },
+                {
+                    startingPhrase: "Полиненаситени",
+                    termId: "polyunsaturatedFat",
+                    description:
+                        "Две или повече двойни връзки – {{omega3|омега-3}} и {{omega6|омега-6}}.",
+                },
+            ],
+        },
+        {
+            action: "Практика",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Замяна",
+                    description:
+                        "Част от наситените мазнини може да се замени с ненаситени за по-добър липиден профил.",
+                },
+            ],
+        },
+    ],
+};
+
+export const polyunsaturatedFat: Element = {
+    name: "Полиненаситени мазнини",
+    description:
+        "Имат две или повече двойни връзки. Съдържат {{essentialFattyAcids|незаменими мастни киселини}} – омега-3 и омега-6, които трябва да идват от храната.",
+    properties: [
+        {
+            action: "Основни видове",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Омега-3",
+                    termId: "omega3",
+                    description: "ALA, EPA, DHA – сърце, мозък, противовъзпаление.",
+                },
+                {
+                    startingPhrase: "Омега-6",
+                    termId: "omega6",
+                    description:
+                        "Линолова киселина (LA) и производни – нужни, но в баланс с омега-3.",
+                },
+            ],
+        },
+        {
+            action: "Баланс",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Съотношение",
+                    description:
+                        "Съвременната диета често има твърде много омега-6 спрямо омега-3.",
+                },
+            ],
+        },
+    ],
+};
+
+export const essentialFattyAcids: Element = {
+    name: "Незаменими мастни киселини",
+    description:
+        "Полиненаситени мастни киселини, които тялото не може да синтезира в достатъчно количество – трябва да идват от храната.",
+    properties: [
+        {
+            action: "Двете основни семейства",
+            itemsAboutAction: [
+                {
+                    startingPhrase: "Омега-6 (линолова киселина)",
+                    termId: "omega6",
+                    description:
+                        "LA – слънчогледово, соево, царевично масло; предшественик на арахидонова киселина.",
+                },
+                {
+                    startingPhrase: "Омега-3 (алфа-линоленова киселина)",
+                    termId: "omega3",
+                    description:
+                        "ALA от лен, чиа, орехи; EPA/DHA от мазна риба.",
                 },
             ],
         },
@@ -194,9 +288,14 @@ export const omega6: Element = {
             action: "Източници",
             itemsAboutAction: [
                 {
+                    startingPhrase: "Линолова киселина (LA)",
+                    description:
+                        "Основната омега-6 в диетата – слънчогледово, соево, царевично масло.",
+                },
+                {
                     startingPhrase: "Растителни масла",
                     description:
-                        "Слънчогледово, царевично, соево, шафраново масло.",
+                        "Слънчогледово, царевично, соево, шафраново, памучено масло.",
                 },
                 {
                     startingPhrase: "Преработени храни",
@@ -232,9 +331,14 @@ export const transFat: Element = {
             action: "Откъде идват",
             itemsAboutAction: [
                 {
-                    startingPhrase: "Преработени храни",
+                    startingPhrase: "Индустриални (избягвай)",
                     description:
-                        "Маргарини, пакетирани сладки изделия, бисквити, пържени полуфабрикати.",
+                        "Частично хидрогенирани масла – маргарини, пакетирани сладкиши, пържени полуфабрикати.",
+                },
+                {
+                    startingPhrase: "Естествени (умерено)",
+                    description:
+                        "Малки количества в мляко и месо от преживни животни (конюгирана линолова киселина) – не са същото като индустриалните транс мазнини.",
                 },
                 {
                     startingPhrase: "Етикет",
@@ -303,7 +407,10 @@ const elementRegistry: Record<ElementId, Element> = {
     triglyceride,
     fatsOverview,
     saturatedFat,
+    unsaturatedFat,
     monounsaturatedFat,
+    polyunsaturatedFat,
+    essentialFattyAcids,
     omega3,
     omega6,
     transFat,
