@@ -92,32 +92,6 @@ function useDialogStack() {
   return context
 }
 
-function useBodyScrollLock(active: boolean) {
-  React.useEffect(() => {
-    if (!active) return
-
-    const scrollY = window.scrollY
-    const { style } = document.body
-
-    style.position = "fixed"
-    style.top = `-${scrollY}px`
-    style.left = "0"
-    style.right = "0"
-    style.overflow = "hidden"
-    style.width = "100%"
-
-    return () => {
-      style.position = ""
-      style.top = ""
-      style.left = ""
-      style.right = ""
-      style.overflow = ""
-      style.width = ""
-      window.scrollTo(0, scrollY)
-    }
-  }, [active])
-}
-
 function useDraggableDialog() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = React.useState(false)
@@ -261,13 +235,11 @@ function DialogContentBody({
   contentProps,
 }: DialogContentConfig) {
   const layer = React.useContext(DialogLayerContext)
-  const { stackSize } = useDialogStack()
   const { contentRef, offset, isDragging, handlePointerDown } =
     useDraggableDialog()
 
   const zIndex = DIALOG_BASE_Z + layer * DIALOG_Z_STEP
-  const showOverlay = stackSize === 1
-  const isTopDialog = layer === stackSize
+  const showOverlay = false
 
   return (
     <DialogPortal>
@@ -302,7 +274,7 @@ function DialogContentBody({
           }}
           {...contentProps}
         >
-          {draggable && isTopDialog ? (
+          {draggable ? (
             <div
               data-slot="dialog-drag-handle"
               aria-hidden
@@ -381,8 +353,6 @@ function DialogStackProvider({ children }: { children: React.ReactNode }) {
   const [mountedDialogs, setMountedDialogs] = React.useState<
     Record<string, MountedDialog>
   >({})
-
-  useBodyScrollLock(openIds.length > 0)
 
   const register = React.useCallback((id: string) => {
     setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
@@ -506,7 +476,7 @@ function Dialog({
     mountDialog(id, {
       contentRef: contentRef.current,
       layer,
-      modal: modal ?? !isNested,
+      modal: false,
       onOpenChange: handleOpenChange,
     })
     register(id)
