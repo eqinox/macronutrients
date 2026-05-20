@@ -25,7 +25,7 @@ interface ElementViewProps {
 
 export function ElementView({ element }: ElementViewProps) {
     const [openItems, setOpenItems] = useState<Record<string, boolean>>({});
-    const [openTermId, setOpenTermId] = useState<ElementId | null>(null);
+    const [openTermIds, setOpenTermIds] = useState<ElementId[]>([]);
 
     const handleOpenChange = (title: string, open: boolean) => {
         setOpenItems((prev) => ({
@@ -34,13 +34,16 @@ export function ElementView({ element }: ElementViewProps) {
         }));
     };
 
-    const handleTermClick = (termId: ElementId) => {
-        if (getElementById(termId)) {
-            setOpenTermId(termId);
-        }
+    const openTerm = (termId: ElementId) => {
+        if (!getElementById(termId)) return;
+        setOpenTermIds((prev) =>
+            prev.includes(termId) ? prev : [...prev, termId],
+        );
     };
 
-    const termElement = openTermId ? getElementById(openTermId) : null;
+    const closeTerm = (termId: ElementId) => {
+        setOpenTermIds((prev) => prev.filter((id) => id !== termId));
+    };
 
     return (
         <>
@@ -51,7 +54,7 @@ export function ElementView({ element }: ElementViewProps) {
                         <CardDescription>
                             <RichText
                                 text={element.description}
-                                onTermClick={handleTermClick}
+                                onTermClick={openTerm}
                             />
                         </CardDescription>
                     </CardHeader>
@@ -85,9 +88,7 @@ export function ElementView({ element }: ElementViewProps) {
                                                     type="button"
                                                     className="cursor-pointer font-bold text-primary underline underline-offset-2 hover:text-primary/80"
                                                     onClick={() =>
-                                                        handleTermClick(
-                                                            item.termId!
-                                                        )
+                                                        openTerm(item.termId!)
                                                     }
                                                 >
                                                     {item.startingPhrase}
@@ -98,9 +99,7 @@ export function ElementView({ element }: ElementViewProps) {
                                             <p>
                                                 <RichText
                                                     text={item.description}
-                                                    onTermClick={
-                                                        handleTermClick
-                                                    }
+                                                    onTermClick={openTerm}
                                                 />
                                             </p>
                                         </div>
@@ -112,16 +111,22 @@ export function ElementView({ element }: ElementViewProps) {
                 </ScrollArea>
             </Card>
 
-            <Dialog
-                open={!!termElement}
-                onOpenChange={(open) => !open && setOpenTermId(null)}
-            >
-                <DialogContent title={termElement?.name ?? "Термин"}>
-                    {termElement ? (
-                        <ElementView element={termElement} />
-                    ) : null}
-                </DialogContent>
-            </Dialog>
+            {openTermIds.map((termId) => {
+                const termElement = getElementById(termId);
+                if (!termElement) return null;
+
+                return (
+                    <Dialog
+                        key={termId}
+                        open
+                        onOpenChange={(open) => !open && closeTerm(termId)}
+                    >
+                        <DialogContent title={termElement.name}>
+                            <ElementView element={termElement} />
+                        </DialogContent>
+                    </Dialog>
+                );
+            })}
         </>
     );
 }

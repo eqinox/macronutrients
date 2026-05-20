@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { ChevronRightIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -26,23 +26,45 @@ export default function Details({ food }: { food: FoodData }) {
     const [isAminoOpen, setIsAminoOpen] = useState(false);
     const [isVitaminsOpen, setIsVitaminsOpen] = useState(false);
     const [isMineralsOpen, setIsMineralsOpen] = useState(false);
-    const [selectedAminoAcid, setSelectedAminoAcid] = useState<keyof typeof EssentialAminoAcids | keyof typeof NonEssentialAminoAcids | null>(null);
+    const [openAminoAcids, setOpenAminoAcids] = useState<
+        Array<
+            keyof typeof EssentialAminoAcids | keyof typeof NonEssentialAminoAcids
+        >
+    >([]);
 
-    const handleAminoacidEssentialClick = (aminoAcid: keyof typeof EssentialAminoAcids) => {
-        setSelectedAminoAcid(aminoAcid);
-    }
-    const handleAminoacidNonEssentialClick = (aminoAcid: keyof typeof NonEssentialAminoAcids) => {
-        setSelectedAminoAcid(aminoAcid);
-    }
+    const openAminoAcid = (
+        aminoAcid:
+            | keyof typeof EssentialAminoAcids
+            | keyof typeof NonEssentialAminoAcids,
+    ) => {
+        setOpenAminoAcids((prev) =>
+            prev.includes(aminoAcid) ? prev : [...prev, aminoAcid],
+        );
+    };
+
+    const closeAminoAcid = (
+        aminoAcid:
+            | keyof typeof EssentialAminoAcids
+            | keyof typeof NonEssentialAminoAcids,
+    ) => {
+        setOpenAminoAcids((prev) => prev.filter((entry) => entry !== aminoAcid));
+    };
+
+    const getAminoAcidTitle = (
+        aminoAcid:
+            | keyof typeof EssentialAminoAcids
+            | keyof typeof NonEssentialAminoAcids,
+    ) =>
+        aminoAcid in EssentialAminoAcids
+            ? EssentialAminoAcids[
+                  aminoAcid as keyof typeof EssentialAminoAcids
+              ]
+            : NonEssentialAminoAcids[
+                  aminoAcid as keyof typeof NonEssentialAminoAcids
+              ];
     const aminoAcidsEssential = (Object.entries(food.aminoAcids.essential)
         .filter((entry): entry is [keyof typeof EssentialAminoAcids, number] => entry[1] !== undefined)
         .sort((a, b) => b[1] - a[1]));
-    const ActiveAminoModal = selectedAminoAcid ? AminoMap[selectedAminoAcid] : null;
-    const selectedAminoAcidTitle = selectedAminoAcid
-        ? (selectedAminoAcid in EssentialAminoAcids
-            ? EssentialAminoAcids[selectedAminoAcid as keyof typeof EssentialAminoAcids]
-            : NonEssentialAminoAcids[selectedAminoAcid as keyof typeof NonEssentialAminoAcids])
-        : "Аминокиселина";
     const aminoAcidsNonEssential = (Object.entries(food.aminoAcids.nonEssential)
         .filter((entry): entry is [keyof typeof NonEssentialAminoAcids, number] => entry[1] !== undefined)
         .sort((a, b) => b[1] - a[1]));
@@ -79,7 +101,7 @@ export default function Details({ food }: { food: FoodData }) {
                                             <h5>Незаменими:</h5>
                                             <ul>
                                                 {aminoAcidsEssential.map(([key, value]) => (
-                                                    <li onClick={() => handleAminoacidEssentialClick(key)} key={key} className="cursor-pointer hover:underline">
+                                                    <li onClick={() => openAminoAcid(key)} key={key} className="cursor-pointer hover:underline">
                                                         {EssentialAminoAcids[key]}: {value} г
                                                     </li>
                                                 ))}
@@ -89,7 +111,7 @@ export default function Details({ food }: { food: FoodData }) {
                                             <h5>Заменими:</h5>
                                             <ul>
                                                 {aminoAcidsNonEssential.map(([key, value]) => (
-                                                    <li onClick={() => handleAminoacidNonEssentialClick(key)} key={key} className="cursor-pointer hover:underline">
+                                                    <li onClick={() => openAminoAcid(key)} key={key} className="cursor-pointer hover:underline">
                                                         {NonEssentialAminoAcids[key]}: {value} г
                                                     </li>
                                                 ))}
@@ -146,11 +168,17 @@ export default function Details({ food }: { food: FoodData }) {
                     </CardContent>
                 </ScrollArea>
             </Card>
-            <Dialog open={!!selectedAminoAcid} onOpenChange={(open) => !open && setSelectedAminoAcid(null)}>
-                <DialogContent title={selectedAminoAcidTitle} className="">
-                    {ActiveAminoModal ? <ActiveAminoModal /> : null}
-                </DialogContent>
-            </Dialog>
+            {openAminoAcids.map((key) => (
+                <Dialog
+                    key={key}
+                    open
+                    onOpenChange={(open) => !open && closeAminoAcid(key)}
+                >
+                    <DialogContent title={getAminoAcidTitle(key)}>
+                        {createElement(AminoMap[key])}
+                    </DialogContent>
+                </Dialog>
+            ))}
         </>
     );
 }

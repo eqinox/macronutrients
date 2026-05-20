@@ -23,10 +23,15 @@ export function TopicListDialog<T extends string>({
     items,
     componentMap,
 }: TopicListDialogProps<T>) {
-    const [selected, setSelected] = useState<T | null>(null);
-    const selectedLabel = selected
-        ? items.find(([key]) => key === selected)?.[1]
-        : title;
+    const [openTopics, setOpenTopics] = useState<T[]>([]);
+
+    const openTopic = (key: T) => {
+        setOpenTopics((prev) => (prev.includes(key) ? prev : [...prev, key]));
+    };
+
+    const closeTopic = (key: T) => {
+        setOpenTopics((prev) => prev.filter((entry) => entry !== key));
+    };
 
     return (
         <Card>
@@ -40,7 +45,7 @@ export function TopicListDialog<T extends string>({
                         <li
                             key={key}
                             className="cursor-pointer hover:underline"
-                            onClick={() => setSelected(key)}
+                            onClick={() => openTopic(key)}
                         >
                             {label}
                         </li>
@@ -48,14 +53,22 @@ export function TopicListDialog<T extends string>({
                 </ul>
             </CardContent>
 
-            <Dialog
-                open={!!selected}
-                onOpenChange={(open) => !open && setSelected(null)}
-            >
-                <DialogContent title={selectedLabel ?? title}>
-                    {selected ? createElement(componentMap[selected]) : null}
-                </DialogContent>
-            </Dialog>
+            {openTopics.map((key) => {
+                const label =
+                    items.find(([itemKey]) => itemKey === key)?.[1] ?? title;
+
+                return (
+                    <Dialog
+                        key={key}
+                        open
+                        onOpenChange={(open) => !open && closeTopic(key)}
+                    >
+                        <DialogContent title={label}>
+                            {createElement(componentMap[key])}
+                        </DialogContent>
+                    </Dialog>
+                );
+            })}
         </Card>
     );
 }
