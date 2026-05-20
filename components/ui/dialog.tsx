@@ -8,11 +8,32 @@ import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
 const DRAG_THRESHOLD_PX = 5
+const RESIZE_THRESHOLD_PX = 3
 const DIALOG_BASE_Z = 50
 const DIALOG_Z_STEP = 10
+const DIALOG_MIN_WIDTH = 260
+const DIALOG_MIN_HEIGHT = 180
+const DIALOG_DEFAULT_WIDTH = 360
+const DIALOG_DEFAULT_HEIGHT = 420
 
 const DRAG_IGNORE_SELECTOR =
-  'button, a, input, textarea, select, label, [role="button"], [role="link"], [contenteditable="true"], [data-slot="dialog-close"]'
+  'button, a, input, textarea, select, label, [role="button"], [role="link"], [contenteditable="true"], [data-slot="dialog-close"], [data-slot="dialog-resize-handle"]'
+
+type ResizeAxis = "e" | "s" | "se"
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getViewportLimits() {
+  if (typeof window === "undefined") {
+    return { maxWidth: 1200, maxHeight: 900 }
+  }
+  return {
+    maxWidth: window.innerWidth - 16,
+    maxHeight: window.innerHeight - 16,
+  }
+}
 
 const DialogLayerContext = React.createContext(0)
 
@@ -92,11 +113,21 @@ function useDialogStack() {
   return context
 }
 
-function useDraggableDialog() {
+function useDialogInteraction() {
   const [offset, setOffset] = React.useState({ x: 0, y: 0 })
+  const [size, setSize] = React.useState<{ width: number; height: number } | null>(
+    null
+  )
   const [isGrabbed, setIsGrabbed] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
+  const [resizeGrabbed, setResizeGrabbed] = React.useState(false)
+  const [isResizing, setIsResizing] = React.useState(false)
+  const [resizeAxis, setResizeAxis] = React.useState<ResizeAxis | null>(null)
+
   const offsetRef = React.useRef(offset)
+  const sizeRef = React.useRef(size)
+  const sizeLockedRef = React.useRef(false)
+  const positionerRef = React.useRef<HTMLDivElement>(null)
   const contentRef = React.useRef<HTMLDivElement>(null)
   const dragRef = React.useRef<{
     pointerId: number
@@ -106,8 +137,33 @@ function useDraggableDialog() {
     originY: number
     active: boolean
   } | null>(null)
+  const resizeRef = React.useRef<{
+    pointerId: number
+    axis: ResizeAxis
+    startX: number
+    startY: number
+    startWidth: number
+    startHeight: number
+    startOffsetX: number
+    startOffsetY: number
+    active: boolean
+  } | null>(null)
 
   offsetRef.current = offset
+  sizeRef.current = size
+
+  const resetDialogState = React.useCallback(() => {
+    setOffset({ x: 0, y: 0 })
+    setSize(null)
+    setIsGrabbed(false)
+    setIsDragging(false)
+    setResizeGrabbed(false)
+    setIsResizing(false)
+    setResizeAxis(null)
+    sizeLockedRef.current = false
+    dragRef.current = null
+    resizeRef.current = null
+  }, [])
 
   React.useEffect(() => {
     const el = contentRef.current
@@ -115,31 +171,68 @@ function useDraggableDialog() {
 
     const observer = new MutationObserver(() => {
       if (el.getAttribute("data-state") === "closed") {
-        setOffset({ x: 0, y: 0 })
-        setIsGrabbed(false)
-        setIsDragging(false)
-        dragRef.current = null
+        resetDialogState()
       }
     })
 
     observer.observe(el, { attributes: true, attributeFilter: ["data-state"] })
     return () => observer.disconnect()
+  }, [resetDialogState])
+
+  React.useLayoutEffect(() => {
+    if (sizeLockedRef.current) return
+
+    const lockInitialSize = () => {
+      if (sizeLockedRef.current) return
+
+      const positioner = positionerRef.current
+      if (positioner) {
+        const rect = positioner.getBoundingClientRect()
+        if (rect.width > 0 && rect.height > 0) {
+          sizeLockedRef.current = true
+          setSize({
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          })
+          return
+        }
+      }
+
+      sizeLockedRef.current = true
+      setSize({
+        width: DIALOG_DEFAULT_WIDTH,
+        height: DIALOG_DEFAULT_HEIGHT,
+      })
+    }
+
+    lockInitialSize()
+    requestAnimationFrame(lockInitialSize)
   }, [])
 
-  const handlePointerDown = React.useCallback(
+  const ensureSize = React.useCallback(() => {
+    const positioner = positionerRef.current
+    if (!positioner) return { width: 320, height: 360 }
+
+    const rect = positioner.getBoundingClientRect()
+    const next = {
+      width: Math.round(sizeRef.current?.width ?? rect.width),
+      height: Math.round(sizeRef.current?.height ?? rect.height),
+    }
+    setSize(next)
+    return next
+  }, [])
+
+  const handleDragPointerDown = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return
       if ((event.target as HTMLElement).closest(DRAG_IGNORE_SELECTOR)) return
 
+      event.preventDefault()
       event.stopPropagation()
 
-      const positioner = event.currentTarget
+      const handle = event.currentTarget
       const pointerId = event.pointerId
-
-      if (positioner.setPointerCapture) {
-        positioner.setPointerCapture(pointerId)
-      }
-
+      handle.setPointerCapture?.(pointerId)
       setIsGrabbed(true)
 
       dragRef.current = {
@@ -165,7 +258,6 @@ function useDraggableDialog() {
         }
 
         moveEvent.preventDefault()
-
         setOffset({
           x: drag.originX + deltaX,
           y: drag.originY + deltaY,
@@ -178,8 +270,8 @@ function useDraggableDialog() {
         setIsGrabbed(false)
         setIsDragging(false)
 
-        if (positioner.hasPointerCapture?.(pointerId)) {
-          positioner.releasePointerCapture(pointerId)
+        if (handle.hasPointerCapture?.(pointerId)) {
+          handle.releasePointerCapture(pointerId)
         }
 
         window.removeEventListener("pointermove", onPointerMove)
@@ -203,13 +295,230 @@ function useDraggableDialog() {
     []
   )
 
+  const handleResizePointerDown = React.useCallback(
+    (axis: ResizeAxis, event: React.PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      const handle = event.currentTarget
+      const pointerId = event.pointerId
+      const { width: startWidth, height: startHeight } = ensureSize()
+
+      handle.setPointerCapture?.(pointerId)
+      setResizeGrabbed(true)
+      setResizeAxis(axis)
+
+      resizeRef.current = {
+        pointerId,
+        axis,
+        startX: event.clientX,
+        startY: event.clientY,
+        startWidth,
+        startHeight,
+        startOffsetX: offsetRef.current.x,
+        startOffsetY: offsetRef.current.y,
+        active: false,
+      }
+
+      const onPointerMove = (moveEvent: PointerEvent) => {
+        const resize = resizeRef.current
+        if (!resize || moveEvent.pointerId !== pointerId) return
+
+        const deltaX = moveEvent.clientX - resize.startX
+        const deltaY = moveEvent.clientY - resize.startY
+
+        if (!resize.active) {
+          const moved =
+            resize.axis === "e"
+              ? Math.abs(deltaX)
+              : resize.axis === "s"
+                ? Math.abs(deltaY)
+                : Math.hypot(deltaX, deltaY)
+          if (moved < RESIZE_THRESHOLD_PX) return
+          resize.active = true
+          setIsResizing(true)
+        }
+
+        moveEvent.preventDefault()
+
+        const { maxWidth, maxHeight } = getViewportLimits()
+        let nextWidth = resize.startWidth
+        let nextHeight = resize.startHeight
+        let nextOffsetX = resize.startOffsetX
+        let nextOffsetY = resize.startOffsetY
+
+        if (resize.axis === "e" || resize.axis === "se") {
+          nextWidth = clamp(
+            resize.startWidth + deltaX,
+            DIALOG_MIN_WIDTH,
+            maxWidth
+          )
+          nextOffsetX =
+            resize.startOffsetX + (nextWidth - resize.startWidth) / 2
+        }
+        if (resize.axis === "s" || resize.axis === "se") {
+          nextHeight = clamp(
+            resize.startHeight + deltaY,
+            DIALOG_MIN_HEIGHT,
+            maxHeight
+          )
+          nextOffsetY =
+            resize.startOffsetY + (nextHeight - resize.startHeight) / 2
+        }
+
+        setSize({ width: nextWidth, height: nextHeight })
+        setOffset({ x: nextOffsetX, y: nextOffsetY })
+      }
+
+      const endResize = () => {
+        resizeRef.current = null
+        setResizeGrabbed(false)
+        setIsResizing(false)
+        setResizeAxis(null)
+
+        if (handle.hasPointerCapture?.(pointerId)) {
+          handle.releasePointerCapture(pointerId)
+        }
+
+        window.removeEventListener("pointermove", onPointerMove)
+        window.removeEventListener("pointerup", endResize)
+        window.removeEventListener("pointercancel", endResize)
+      }
+
+      window.addEventListener("pointermove", onPointerMove, { passive: false })
+      window.addEventListener("pointerup", endResize)
+      window.addEventListener("pointercancel", endResize)
+    },
+    [ensureSize]
+  )
+
   return {
+    positionerRef,
     contentRef,
     offset,
+    size,
     isGrabbed,
     isDragging,
-    handlePointerDown,
+    resizeGrabbed,
+    isResizing,
+    resizeAxis,
+    handleDragPointerDown,
+    handleResizePointerDown,
   }
+}
+
+function DialogResizeHandles({
+  resizeGrabbed,
+  isResizing,
+  resizeAxis,
+  onResizePointerDown,
+}: {
+  resizeGrabbed: boolean
+  isResizing: boolean
+  resizeAxis: ResizeAxis | null
+  onResizePointerDown: (
+    axis: ResizeAxis,
+    event: React.PointerEvent<HTMLDivElement>
+  ) => void
+}) {
+  const isActiveResize = resizeGrabbed || isResizing
+  const handleBase =
+    "absolute z-20 touch-none select-none transition-colors duration-150"
+  const edgeBase =
+    "bg-transparent hover:bg-primary/15 active:bg-primary/20"
+  const activeEdge = "bg-primary/20"
+
+  return (
+    <>
+      <div
+        data-slot="dialog-resize-handle"
+        data-resize-axis="s"
+        aria-label="Преоразмери височината"
+        className={cn(
+          handleBase,
+          edgeBase,
+          "right-6 bottom-0 left-0 h-5 cursor-ns-resize sm:right-4 sm:h-3",
+          (resizeGrabbed || isResizing) && resizeAxis === "s" && activeEdge,
+          isResizing && resizeAxis === "s" && "bg-primary/25"
+        )}
+        onPointerDown={(event) => onResizePointerDown("s", event)}
+      >
+        <span
+          className={cn(
+            "absolute bottom-1 left-1/2 hidden h-1 -translate-x-1/2 rounded-full bg-muted-foreground/40 sm:block",
+            "w-12",
+            isActiveResize && resizeAxis === "s" && "w-16 bg-primary/70"
+          )}
+        />
+        <span
+          className={cn(
+            "absolute bottom-1.5 left-1/2 block h-1.5 -translate-x-1/2 rounded-full bg-muted-foreground/45 sm:hidden",
+            "w-16",
+            isActiveResize && resizeAxis === "s" && "w-20 bg-primary"
+          )}
+        />
+      </div>
+
+      <div
+        data-slot="dialog-resize-handle"
+        data-resize-axis="e"
+        aria-label="Преоразмери ширината"
+        className={cn(
+          handleBase,
+          edgeBase,
+          "top-14 right-0 bottom-6 w-5 cursor-ew-resize sm:top-11 sm:bottom-4 sm:w-3",
+          (resizeGrabbed || isResizing) && resizeAxis === "e" && activeEdge,
+          isResizing && resizeAxis === "e" && "bg-primary/25"
+        )}
+        onPointerDown={(event) => onResizePointerDown("e", event)}
+      >
+        <span
+          className={cn(
+            "absolute top-1/2 right-1 hidden h-12 w-1 -translate-y-1/2 rounded-full bg-muted-foreground/40 sm:block",
+            isActiveResize && resizeAxis === "e" && "h-16 bg-primary/70"
+          )}
+        />
+        <span
+          className={cn(
+            "absolute top-1/2 right-1.5 block h-16 w-1.5 -translate-y-1/2 rounded-full bg-muted-foreground/45 sm:hidden",
+            isActiveResize && resizeAxis === "e" && "h-20 bg-primary"
+          )}
+        />
+      </div>
+
+      <div
+        data-slot="dialog-resize-handle"
+        data-resize-axis="se"
+        aria-label="Преоразмери ширината и височината"
+        className={cn(
+          handleBase,
+          edgeBase,
+          "right-0 bottom-0 flex h-8 w-8 cursor-nwse-resize items-end justify-end rounded-br-xl p-1 sm:h-5 sm:w-5",
+          (resizeGrabbed || isResizing) && resizeAxis === "se" && activeEdge,
+          isResizing && resizeAxis === "se" && "bg-primary/30"
+        )}
+        onPointerDown={(event) => onResizePointerDown("se", event)}
+      >
+        <span
+          className={cn(
+            "block rounded-sm border-r-2 border-b-2 border-muted-foreground/50 transition-colors",
+            "h-3 w-3 sm:h-2.5 sm:w-2.5",
+            isActiveResize &&
+              resizeAxis === "se" &&
+              "border-primary h-4 w-4 sm:h-3 sm:w-3"
+          )}
+        />
+      </div>
+
+      {isActiveResize ? (
+        <span className="pointer-events-none absolute right-10 bottom-2 z-30 rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-medium text-primary-foreground sm:hidden">
+          {isResizing ? "Преоразмеряване" : "Задръж и преоразмери"}
+        </span>
+      ) : null}
+    </>
+  )
 }
 
 function DialogOverlay({
@@ -241,12 +550,25 @@ function DialogContentBody({
   contentProps,
 }: DialogContentConfig) {
   const layer = React.useContext(DialogLayerContext)
-  const { contentRef, offset, isGrabbed, isDragging, handlePointerDown } =
-    useDraggableDialog()
+  const {
+    positionerRef,
+    contentRef,
+    offset,
+    size,
+    isGrabbed,
+    isDragging,
+    resizeGrabbed,
+    isResizing,
+    resizeAxis,
+    handleDragPointerDown,
+    handleResizePointerDown,
+  } = useDialogInteraction()
 
   const zIndex = DIALOG_BASE_Z + layer * DIALOG_Z_STEP
   const showOverlay = false
   const isActiveDrag = isGrabbed || isDragging
+  const isActiveResize = resizeGrabbed || isResizing
+  const isInteracting = isActiveDrag || isActiveResize
 
   return (
     <DialogPortal>
@@ -254,19 +576,26 @@ function DialogContentBody({
         <DialogOverlay style={{ zIndex: zIndex - 1 }} />
       ) : null}
       <div
+        ref={positionerRef}
         data-slot="dialog-positioner"
         data-grabbed={isGrabbed || undefined}
         data-dragging={isDragging || undefined}
+        data-resize-grabbed={resizeGrabbed || undefined}
+        data-resizing={isResizing || undefined}
         className={cn(
-          "fixed top-1/2 left-1/2 w-[calc(100vw-2rem)] max-w-sm transition-[box-shadow,transform] duration-150 sm:max-w-md",
+          "fixed top-1/2 left-1/2 transition-[box-shadow,transform] duration-150",
+          !size && "w-[calc(100vw-2rem)] max-w-sm sm:max-w-md",
           isGrabbed && "drop-shadow-lg",
-          isDragging && "drop-shadow-2xl"
+          isDragging && "drop-shadow-2xl",
+          isActiveResize && "drop-shadow-xl"
         )}
         style={{
           zIndex,
           left: draggable ? `calc(50% + ${offset.x}px)` : "50%",
           top: draggable ? `calc(50% + ${offset.y}px)` : "50%",
           transform: "translate(-50%, -50%)",
+          width: size?.width,
+          height: size?.height,
         }}
       >
         <DialogPrimitive.Content
@@ -274,15 +603,17 @@ function DialogContentBody({
           data-slot="dialog-content"
           data-grabbed={isGrabbed || undefined}
           data-dragging={isDragging || undefined}
+          data-resize-grabbed={resizeGrabbed || undefined}
+          data-resizing={isResizing || undefined}
           style={style}
           className={cn(
-            "relative grid max-h-[min(85dvh,calc(100dvh-2rem))] w-full min-w-0 gap-4 overflow-x-hidden overflow-y-auto overscroll-contain rounded-xl bg-popover p-4 pt-14 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-150 outline-none sm:pt-10",
+            "relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-xl bg-popover text-sm text-popover-foreground ring-1 ring-foreground/10 duration-150 outline-none",
+            !size && "max-h-[min(85dvh,calc(100dvh-2rem))]",
             "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-            isGrabbed &&
-              "ring-2 ring-primary/50 shadow-md",
-            isDragging &&
-              "ring-2 ring-primary shadow-xl scale-[1.01]",
-            isActiveDrag && "overflow-y-hidden",
+            isGrabbed && "ring-2 ring-primary/50 shadow-md",
+            isDragging && "ring-2 ring-primary shadow-xl scale-[1.01]",
+            isActiveResize && "ring-2 ring-primary/60 shadow-lg",
+            isResizing && "ring-2 ring-primary shadow-xl",
             className
           )}
           onInteractOutside={(event) => {
@@ -301,18 +632,15 @@ function DialogContentBody({
               data-grabbed={isGrabbed || undefined}
               data-dragging={isDragging || undefined}
               className={cn(
-                "absolute inset-x-0 top-0 z-10 flex touch-none cursor-grab flex-col items-center justify-center gap-1 rounded-t-xl border-b transition-colors duration-150 select-none",
-                "h-12 sm:h-8",
+                "relative z-10 flex shrink-0 touch-none cursor-grab flex-col items-center justify-center gap-1 rounded-t-xl border-b transition-colors duration-150 select-none",
+                "h-12 sm:h-9",
                 "border-border/30 bg-muted/35 active:cursor-grabbing sm:bg-muted/20",
                 isGrabbed &&
                   "cursor-grabbing border-primary/40 bg-primary/10",
                 isDragging &&
                   "cursor-grabbing border-primary/60 bg-primary/15"
               )}
-              onPointerDown={(event) => {
-                event.preventDefault()
-                handlePointerDown(event)
-              }}
+              onPointerDown={handleDragPointerDown}
             >
               <span
                 className={cn(
@@ -333,13 +661,27 @@ function DialogContentBody({
               </span>
             </div>
           ) : null}
+          <DialogResizeHandles
+            resizeGrabbed={resizeGrabbed}
+            isResizing={isResizing}
+            resizeAxis={resizeAxis}
+            onResizePointerDown={handleResizePointerDown}
+          />
           <DialogTitle className="sr-only">{title}</DialogTitle>
-          {children}
+          <div
+            data-slot="dialog-scroll-body"
+            className={cn(
+              "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain p-4",
+              isInteracting && "overflow-y-hidden"
+            )}
+          >
+            {children}
+          </div>
           {showCloseButton ? (
             <DialogPrimitive.Close data-slot="dialog-close" asChild>
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2 z-20 cursor-default"
+                className="absolute top-2 right-2 z-30 cursor-default"
                 size="icon-sm"
               >
                 <XIcon />

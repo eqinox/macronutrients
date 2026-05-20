@@ -128,8 +128,3 @@
     }
 }
 
-@layer components {
-  .window {
-    @apply max-h-72 overflow-y-auto;
-  }
-}

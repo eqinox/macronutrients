@@ -71,8 +71,7 @@ export default function Details({ food }: { food: FoodData }) {
 
     return (
         <>
-            <Card className="min-w-0 w-full max-w-full border-0 shadow-none">
-                <ScrollArea className="window">
+            <Card className="min-w-0 w-full max-w-full border-0 bg-transparent py-0 shadow-none">
                     <CardHeader>
                         <CardTitle>{food.name} - Детайли</CardTitle>
                     </CardHeader>
@@ -166,7 +165,6 @@ export default function Details({ food }: { food: FoodData }) {
                             </CollapsibleContent>
                         </Collapsible>
                     </CardContent>
-                </ScrollArea>
             </Card>
             {openAminoAcids.map((key) => (
                 <Dialog
