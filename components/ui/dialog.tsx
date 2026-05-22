@@ -37,6 +37,16 @@ function getViewportLimits() {
 
 const DialogLayerContext = React.createContext(0)
 
+type DialogContentProps = React.ComponentProps<typeof DialogPrimitive.Content>
+
+type DialogDismissHandlers = Pick<
+  DialogContentProps,
+  | "onInteractOutside"
+  | "onPointerDownOutside"
+  | "onFocusOutside"
+  | "onEscapeKeyDown"
+>
+
 type DialogContentConfig = {
   title: string
   children: React.ReactNode
@@ -44,13 +54,11 @@ type DialogContentConfig = {
   showCloseButton?: boolean
   draggable?: boolean
   style?: React.CSSProperties
-  onInteractOutside?: React.ComponentProps<
-    typeof DialogPrimitive.Content
-  >["onInteractOutside"]
-  contentProps?: Omit<
-    React.ComponentProps<typeof DialogPrimitive.Content>,
-    "onInteractOutside"
-  >
+  onInteractOutside?: DialogDismissHandlers["onInteractOutside"]
+  onPointerDownOutside?: DialogDismissHandlers["onPointerDownOutside"]
+  onFocusOutside?: DialogDismissHandlers["onFocusOutside"]
+  onEscapeKeyDown?: DialogDismissHandlers["onEscapeKeyDown"]
+  contentProps?: Omit<DialogContentProps, keyof DialogDismissHandlers>
 }
 
 type DialogContentRef = {
@@ -547,6 +555,9 @@ function DialogContentBody({
   draggable = true,
   style,
   onInteractOutside,
+  onPointerDownOutside,
+  onFocusOutside,
+  onEscapeKeyDown,
   contentProps,
 }: DialogContentConfig) {
   const layer = React.useContext(DialogLayerContext)
@@ -621,19 +632,18 @@ function DialogContentBody({
             // Non-modal dialogs: close only via X, not when clicking the page or search.
             event.preventDefault()
             onInteractOutside?.(event)
-            contentProps?.onInteractOutside?.(event)
           }}
           onPointerDownOutside={(event) => {
             event.preventDefault()
-            contentProps?.onPointerDownOutside?.(event)
+            onPointerDownOutside?.(event)
           }}
           onFocusOutside={(event) => {
             event.preventDefault()
-            contentProps?.onFocusOutside?.(event)
+            onFocusOutside?.(event)
           }}
           onEscapeKeyDown={(event) => {
             event.preventDefault()
-            contentProps?.onEscapeKeyDown?.(event)
+            onEscapeKeyDown?.(event)
           }}
         >
           {draggable ? (
@@ -931,42 +941,38 @@ function DialogContent({
   draggable = true,
   style,
   onInteractOutside,
+  onPointerDownOutside,
+  onFocusOutside,
+  onEscapeKeyDown,
   ...contentProps
-}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+}: DialogContentProps & {
   title: string
   showCloseButton?: boolean
   draggable?: boolean
 }) {
   const registration = React.useContext(DialogRegistrationContext)
 
+  const contentConfig: DialogContentConfig = {
+    title,
+    children,
+    className,
+    showCloseButton,
+    draggable,
+    style,
+    onInteractOutside,
+    onPointerDownOutside,
+    onFocusOutside,
+    onEscapeKeyDown,
+    contentProps,
+  }
+
   React.useLayoutEffect(() => {
     if (!registration) return
-
-    registration.setContentRef({
-      title,
-      children,
-      className,
-      showCloseButton,
-      draggable,
-      style,
-      onInteractOutside,
-      contentProps,
-    })
+    registration.setContentRef(contentConfig)
   })
 
   if (!registration) {
-    return (
-      <DialogContentBody
-        title={title}
-        children={children}
-        className={className}
-        showCloseButton={showCloseButton}
-        draggable={draggable}
-        style={style}
-        onInteractOutside={onInteractOutside}
-        contentProps={contentProps}
-      />
-    )
+    return <DialogContentBody {...contentConfig} />
   }
 
   return null
