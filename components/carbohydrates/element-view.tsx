@@ -153,43 +153,37 @@ export function ElementView({ element }: ElementViewProps) {
 
                             <CollapsibleContent>
 
-                                {property.itemsAboutAction.map((item) => (
+                                {property.itemsAboutAction.map((item, index) => {
+                                    const phrase = item.startingPhrase.trim();
+                                    const description = item.description.trim();
+                                    const itemKey =
+                                        phrase || description || String(index);
 
-                                    <div
-
-                                        key={item.startingPhrase}
-
-                                        className="py-2"
-
-                                    >
-
-                                        <span className="font-bold">
-
-                                            <RichText
-
-                                                text={item.startingPhrase}
-
-                                                onTermClick={openTerm}
-
-                                            />
-
-                                        </span>
-
-                                        <p>
-
-                                            <RichText
-
-                                                text={item.description}
-
-                                                onTermClick={openTerm}
-
-                                            />
-
-                                        </p>
-
-                                    </div>
-
-                                ))}
+                                    return (
+                                        <div key={itemKey} className="py-2">
+                                            {phrase ? (
+                                                <span className="font-bold">
+                                                    <RichText
+                                                        text={item.startingPhrase}
+                                                        onTermClick={openTerm}
+                                                    />
+                                                </span>
+                                            ) : null}
+                                            {description ? (
+                                                <p
+                                                    className={
+                                                        phrase ? undefined : "m-0"
+                                                    }
+                                                >
+                                                    <RichText
+                                                        text={item.description}
+                                                        onTermClick={openTerm}
+                                                    />
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    );
+                                })}
 
                             </CollapsibleContent>
 

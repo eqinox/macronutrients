@@ -12,7 +12,7 @@ function aminoAcid(
             {
                 action: "Роля в тялото",
                 itemsAboutAction: bullets.map((text) => ({
-                    startingPhrase: text,
+                    startingPhrase: "",
                     description: text,
                 })),
             },
