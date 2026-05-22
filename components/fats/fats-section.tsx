@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent } from "../ui/dialog";
+import MacroFoodsDialog from "@/components/macro-foods-dialog";
+import { fatPredominantFoods } from "@/data/foods";
 import FatsDescription from "./fats-description";
 
 export default function FatsSection() {
@@ -28,11 +30,16 @@ export default function FatsSection() {
                         </ul>
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col gap-3">
                     <p className="text-sm text-muted-foreground">
                         Кликни върху заглавието, за да видиш видовете мазнини и
                         подробни обяснения.
                     </p>
+                    <MacroFoodsDialog
+                        buttonLabel="Храни с преобладаващи мазнини"
+                        dialogTitle="Храни с преобладаващи мазнини"
+                        foods={fatPredominantFoods}
+                    />
                 </CardContent>
             </Card>
 

@@ -616,14 +616,25 @@ function DialogContentBody({
             isResizing && "ring-2 ring-primary shadow-xl",
             className
           )}
-          onInteractOutside={(event) => {
-            const target = event.target as HTMLElement
-            if (target.closest("[data-slot='dialog-content']")) {
-              event.preventDefault()
-            }
-            onInteractOutside?.(event)
-          }}
           {...contentProps}
+          onInteractOutside={(event) => {
+            // Non-modal dialogs: close only via X, not when clicking the page or search.
+            event.preventDefault()
+            onInteractOutside?.(event)
+            contentProps?.onInteractOutside?.(event)
+          }}
+          onPointerDownOutside={(event) => {
+            event.preventDefault()
+            contentProps?.onPointerDownOutside?.(event)
+          }}
+          onFocusOutside={(event) => {
+            event.preventDefault()
+            contentProps?.onFocusOutside?.(event)
+          }}
+          onEscapeKeyDown={(event) => {
+            event.preventDefault()
+            contentProps?.onEscapeKeyDown?.(event)
+          }}
         >
           {draggable ? (
             <div

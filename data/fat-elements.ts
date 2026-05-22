@@ -429,7 +429,7 @@ export const cholesterol: Element = {
     ],
 };
 
-const elementRegistry: Record<ElementId, Element> = {
+export const fatElementRegistry: Record<ElementId, Element> = {
     triglyceride,
     fatsOverview,
     saturatedFat,
@@ -444,5 +444,5 @@ const elementRegistry: Record<ElementId, Element> = {
 };
 
 export function getElementById(id: ElementId): Element | undefined {
-    return elementRegistry[id];
+    return fatElementRegistry[id];
 }

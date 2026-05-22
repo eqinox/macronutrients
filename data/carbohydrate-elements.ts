@@ -587,7 +587,7 @@ export const insolubleFiber: Element = {
     ],
 };
 
-const elementRegistry: Record<ElementId, Element> = {
+export const carbohydrateElementRegistry: Record<ElementId, Element> = {
     glycemicIndex,
     glycemicLoad,
     resistantStarch,
@@ -606,5 +606,5 @@ const elementRegistry: Record<ElementId, Element> = {
 };
 
 export function getElementById(id: ElementId): Element | undefined {
-    return elementRegistry[id];
+    return carbohydrateElementRegistry[id];
 }

@@ -201,7 +201,7 @@ export const tyrosine = aminoAcid(
     ],
 );
 
-const elementRegistry: Record<ElementId, Element> = {
+export const proteinElementRegistry: Record<ElementId, Element> = {
     leucine,
     isoleucine,
     valine,
@@ -225,5 +225,5 @@ const elementRegistry: Record<ElementId, Element> = {
 };
 
 export function getElementById(id: ElementId): Element | undefined {
-    return elementRegistry[id];
+    return proteinElementRegistry[id];
 }

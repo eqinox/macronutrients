@@ -163,31 +163,17 @@ export function ElementView({ element }: ElementViewProps) {
 
                                     >
 
-                                        {item.termId ? (
+                                        <span className="font-bold">
 
-                                            <button
+                                            <RichText
 
-                                                type="button"
+                                                text={item.startingPhrase}
 
-                                                className="cursor-pointer font-bold text-primary underline underline-offset-2 hover:text-primary/80"
+                                                onTermClick={openTerm}
 
-                                                onClick={() =>
+                                            />
 
-                                                    openTerm(item.termId!)
-
-                                                }
-
-                                            >
-
-                                                {item.startingPhrase}
-
-                                            </button>
-
-                                        ) : (
-
-                                            <b>{item.startingPhrase}</b>
-
-                                        )}
+                                        </span>
 
                                         <p>
 

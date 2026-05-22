@@ -1,4 +1,5 @@
 import CarbohydratesSection from "@/components/carbohydrates/carbohydrates-section"
+import FoodSearch from "@/components/food-search"
 import FatsSection from "@/components/fats/fats-section"
 import HormonesSection from "@/components/hormones/hormones-section"
 import MicronutrientsSection from "@/components/micronutrients/micronutrients-section"
@@ -12,6 +13,8 @@ export default function Page() {
   return (
     <div className="flex flex-col gap-6 overflow-x-hidden p-4 sm:p-6">
       <h1 className="text-2xl font-bold">Хранене, нутриенти и хормони</h1>
+
+      <FoodSearch />
 
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-2 xl:items-start">
         <section className="flex flex-col gap-4">

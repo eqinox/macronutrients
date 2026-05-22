@@ -392,7 +392,7 @@ export const gonadsOverview: Element = {
             {
                 startingPhrase: "От холестерол",
                 description:
-                    "Стероидни полови хормони – връзка с {{cholesterol|холестерола}} и {{fatsOverview|мазнините}} в диетата (не само от тях, но са от същия „семейство“).",
+                    "Стероидни полови хормони – връзка с {{cholesterol|холестерола}} и мазнините в диетата (не само от тях, но са от същия „семейство“).",
             },
         ]),
         imbalance([
@@ -1123,7 +1123,7 @@ export const leptin = hormoneElement(
     ],
 );
 
-const elementRegistry: Record<ElementId, Element> = {
+export const hormoneElementRegistry: Record<ElementId, Element> = {
     hormonesOverview,
     hormoneTypesOverview,
     peptideHormonesOverview,
@@ -1160,5 +1160,5 @@ const elementRegistry: Record<ElementId, Element> = {
 };
 
 export function getElementById(id: ElementId): Element | undefined {
-    return elementRegistry[id];
+    return hormoneElementRegistry[id];
 }

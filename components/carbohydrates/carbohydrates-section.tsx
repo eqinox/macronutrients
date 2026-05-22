@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent } from "../ui/dialog";
-import Food from "../food";
-import Details from "../details";
-import { FoodData } from "@/lib/types";
-import { proteinFoods } from "@/data/proteins";
+import MacroFoodsDialog from "@/components/macro-foods-dialog";
+import { carbPredominantFoods } from "@/data/foods";
 import CarbohydratesDescription from "./carbohydrates-description";
 
 export default function CarbohydratesSection() {
-    const [selectedFood, setSelectedFood] = useState<FoodData | null>(null);
     const [isSugarsOpen, setIsSugarsOpen] = useState(false);
 
     const handleCarbohydratesClick = () => {
@@ -39,20 +36,13 @@ export default function CarbohydratesSection() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {/* Храни и какво ти дават
-                    <ul>
-                        {proteinFoods.map(food => <Food key={food.name} food={food} onSelect={setSelectedFood} />)}
-                    </ul> */}
+                    <MacroFoodsDialog
+                        buttonLabel="Храни с преобладаващи въглехидрати"
+                        dialogTitle="Храни с преобладаващи въглехидрати"
+                        foods={carbPredominantFoods}
+                    />
                 </CardContent>
             </Card>
-
-            <Dialog open={!!selectedFood} onOpenChange={(open) => !open && setSelectedFood(null)}>
-                <DialogContent
-                    title={selectedFood ? `${selectedFood.name} - Детайли` : "Детайли"}
-                >
-                    {selectedFood && <Details food={selectedFood} />}
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={isSugarsOpen} onOpenChange={setIsSugarsOpen}>
                 <DialogContent title="Въглехидрати">

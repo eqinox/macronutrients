@@ -3,56 +3,43 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Dialog, DialogContent } from "../ui/dialog";
-import Food from "../food";
-import Details from "../details";
+import MacroFoodsDialog from "@/components/macro-foods-dialog";
+import { proteinPredominantFoods } from "@/data/foods";
 import AminoacidDescription from "./aminoacids/aminoacid-description";
-import { FoodData } from "@/lib/types";
-import { proteinFoods } from "@/data/proteins";
 
 export default function ProteinsSection() {
-    const [selectedFood, setSelectedFood] = useState<FoodData | null>(null);
     const [isAminoOpen, setIsAminoOpen] = useState(false);
-
-    const handleProteinsClick = () => {
-        setIsAminoOpen(true);
-    }
 
     return (
         <>
             <Card className="max-w-md">
                 <CardHeader>
-                    <CardTitle className="cursor-pointer hover:underline" onClick={() => handleProteinsClick()}>
+                    <CardTitle
+                        className="cursor-pointer hover:underline"
+                        onClick={() => setIsAminoOpen(true)}
+                    >
                         Протеини
                     </CardTitle>
                     <CardDescription>
                         <ul>
-                            <li>
-                                Изграждат мускули и тъкани
-                            </li>
-                            <li>
-                                Възстановяват след натоварване
-                            </li>
-                            <li>
-                                Участват в хормони и ензими
-                            </li>
+                            <li>Изграждат мускули и тъкани</li>
+                            <li>Възстановяват след натоварване</li>
+                            <li>Участват в хормони и ензими</li>
                         </ul>
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                    Храни и какво ти дават
-                    <ul>
-                        {proteinFoods.map(food => <Food key={food.name} food={food} onSelect={setSelectedFood} />)}
-                    </ul>
+                <CardContent className="flex flex-col gap-3">
+                    <p className="text-sm text-muted-foreground">
+                        Кликни заглавието за обяснение на протеините. За конкретни
+                        храни използвай търсачката отгоре.
+                    </p>
+                    <MacroFoodsDialog
+                        buttonLabel="Храни с преобладаващи протеини"
+                        dialogTitle="Храни с преобладаващи протеини"
+                        foods={proteinPredominantFoods}
+                    />
                 </CardContent>
             </Card>
-
-            <Dialog open={!!selectedFood} onOpenChange={(open) => !open && setSelectedFood(null)}>
-                <DialogContent
-                    title={selectedFood ? `${selectedFood.name} - Детайли` : "Детайли"}
-                >
-                    {selectedFood && <Details food={selectedFood} />}
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={isAminoOpen} onOpenChange={setIsAminoOpen}>
                 <DialogContent title="Аминокиселини">

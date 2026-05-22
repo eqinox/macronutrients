@@ -21,6 +21,10 @@ export function RichText({ text, onTermClick, className }: RichTextProps) {
                 const term = getElementById(segment.id);
                 const label = segment.label ?? term?.name ?? segment.id;
 
+                if (!term) {
+                    return <span key={index}>{label}</span>;
+                }
+
                 return (
                     <button
                         key={index}

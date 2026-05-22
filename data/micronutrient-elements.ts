@@ -901,7 +901,7 @@ export const cobalt: Element = {
     ],
 };
 
-const elementRegistry: Record<ElementId, Element> = {
+export const micronutrientElementRegistry: Record<ElementId, Element> = {
     micronutrientsOverview,
     vitaminA,
     vitaminD,
@@ -937,5 +937,5 @@ const elementRegistry: Record<ElementId, Element> = {
 };
 
 export function getElementById(id: ElementId): Element | undefined {
-    return elementRegistry[id];
+    return micronutrientElementRegistry[id];
 }
